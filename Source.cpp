@@ -60,7 +60,7 @@ int JNIWindowsSnapAdapter::toNextProcessEntry()
     }
     catch (SnapError e)
     {
-        MessageBox(NULL, e.what().c_str(), L"Warning!", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(NULL, e.what().c_str(), L"Warning", MB_ICONEXCLAMATION | MB_OK);
         return true;
         //if a variable is set to scilent
         //std::wcerr << e.what();
@@ -111,8 +111,9 @@ char* JNIWindowsSnapAdapter::getProgrammNameByActiveWindow()
     return str;
 }
 
-int JNIWindowsSnapAdapter::getCpuLoadByProcess()
+double JNIWindowsSnapAdapter::getCpuLoadByProcess()
 {
+    double retVal = -1;
     try
     {
         _FILETIME procCreateTime = {};
@@ -122,7 +123,7 @@ int JNIWindowsSnapAdapter::getCpuLoadByProcess()
 
         if (hProcess == NULL)
         {
-            //std::cerr << "And so could not get cpu usage of process " << pe32.th32ProcessID << " named " << pe32.szExeFile;
+            //std::cerr << "And so could not get cpu usage of process " << pe32.th32ProcessID << " named " << pe32.szExeFile << "\n";
             return -1;
         }
         if (!GetProcessTimes(hProcess, &procCreateTime, &procExitTime, &procKernelTime, &procUserTime))
@@ -132,22 +133,83 @@ int JNIWindowsSnapAdapter::getCpuLoadByProcess()
         _FILETIME sysIdleTime = {};
         _FILETIME sysKernelTime = {};
         _FILETIME sysUserTime = {};
+
+        ULARGE_INTEGER procKernelInteger = {};
+        ULARGE_INTEGER procUserInteger = {};
+        ULARGE_INTEGER sysIdleInteger = {};
+        ULARGE_INTEGER sysKernelInteger = {};
+        ULARGE_INTEGER sysUserInteger = {};
+
         if (!GetSystemTimes(&sysIdleTime, &sysKernelTime, &sysUserTime))
         {
             throw SnapError(L"Getting time of system");
         }
-        return (procKernelTime.dwLowDateTime + procKernelTime.dwHighDateTime + procUserTime.dwLowDateTime + procUserTime.dwHighDateTime) * 100 / (sysIdleTime.dwLowDateTime + sysIdleTime.dwHighDateTime + sysKernelTime.dwLowDateTime + sysKernelTime.dwHighDateTime + sysUserTime.dwLowDateTime + sysUserTime.dwHighDateTime);
+
+        procKernelInteger.HighPart = procKernelTime.dwHighDateTime;
+        procKernelInteger.LowPart = procKernelTime.dwLowDateTime;
+
+        procUserInteger.HighPart = procUserTime.dwHighDateTime;
+        procUserInteger.LowPart = procUserTime.dwLowDateTime;
+
+        sysIdleInteger.HighPart = sysIdleTime.dwHighDateTime;
+        sysIdleInteger.LowPart = sysIdleTime.dwLowDateTime;
+
+        sysKernelInteger.HighPart = sysIdleTime.dwHighDateTime;
+        sysKernelInteger.LowPart = sysIdleTime.dwLowDateTime;
+
+        sysUserInteger.HighPart = sysUserTime.dwHighDateTime;
+        sysUserInteger.LowPart = sysUserTime.dwLowDateTime;
+
+        //Could use GetProcessId(hProcess) instead, but chose speed
+        auto processIt = prevProcessesCPUTime.find(pe32.th32ProcessID);
+        if (processIt != prevProcessesCPUTime.end())
+        {
+            //std::cout << "\n\nBefore:\n";
+            //processIt->second.print();
+
+            auto procKernelInterval = procKernelInteger.QuadPart - processIt->second.procKernelTime.QuadPart;
+            auto procUserInterval = procUserInteger.QuadPart - processIt->second.procUserTime.QuadPart;
+            auto sysIdleInterval = sysIdleInteger.QuadPart - processIt->second.sysIdleTime.QuadPart;
+            auto sysKernelInterval = sysKernelInteger.QuadPart - processIt->second.sysKernelTime.QuadPart;
+            auto sysUserIntercals = sysUserInteger.QuadPart - processIt->second.sysUserTime.QuadPart;
+            retVal = static_cast<double>(procKernelInterval + procUserInterval) / static_cast<double>(sysIdleInterval + sysKernelInterval + sysUserIntercals) * 100;
+
+            processIt->second = ProcessCPUTime(procKernelInteger, procUserInteger, sysIdleInteger, sysKernelInteger, sysUserInteger);
+            //std::cout << "After:\n";
+            //processIt->second.print();
+        }
+        else
+        {
+            prevProcessesCPUTime.emplace(pe32.th32ProcessID, ProcessCPUTime(procKernelInteger, procUserInteger, sysIdleInteger, sysKernelInteger, sysUserInteger));
+            retVal = -1;
+        }
+        return retVal;
     }
     catch (SnapError e)
     {
         MessageBox(NULL, e.what().c_str(), L"Warning!", MB_ICONEXCLAMATION | MB_OK);
     }
-    return 0;
+    return -1;
 }
 
-int64_t JNIWindowsSnapAdapter::getRAMLoadByProcess()
+size_t JNIWindowsSnapAdapter::getRAMLoadByProcess()
 {
-
+    try
+    {
+        PROCESS_MEMORY_COUNTERS_EX pmc;
+        if (!GetProcessMemoryInfo(hProcess, (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)))
+        {
+            throw SnapError(L"Getting ram usage of process");
+        }
+        SIZE_T virtualMemProcessUsed = pmc.PrivateUsage;
+        SIZE_T physMemProcessUsed = pmc.WorkingSetSize;
+        return virtualMemProcessUsed + physMemProcessUsed;
+    }
+    catch(SnapError e)
+    {
+        //std::cerr << "And so " << e.what() << pe32.th32ProcessID << " named " << pe32.szExeFile << "\n";
+    }
+    return -1;
 }
 
 SnapError::SnapError(const wchar_t* what)
@@ -169,30 +231,9 @@ SnapError::SnapError(const wchar_t* what)
     this->whatStr += L" failed with error " + std::to_wstring(eNum) + L"\n" + sysMsg;
 }
 
-void EnableDebugPriv()
-{
-    HANDLE hToken;
-    LUID luid;
-    TOKEN_PRIVILEGES tkp;
-
-    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-
-    LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid);
-
-    tkp.PrivilegeCount = 1;
-    tkp.Privileges[0].Luid = luid;
-    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    AdjustTokenPrivileges(hToken, false, &tkp, sizeof(tkp), NULL, NULL);
-
-    CloseHandle(hToken);
-}
-
 int main()
 {
     setlocale(LC_ALL, "RUS");
-
-    EnableDebugPriv();
 
     JNIWindowsSnapAdapter adapter = JNIWindowsSnapAdapter();
     try
@@ -206,8 +247,14 @@ int main()
     }
     do
     {
-        std::wcout << "ID: " << adapter.getCurProcID() << "\nName: " << adapter.getCurProcName() << "\nThreads: " << adapter.getCurProcThreadCnt() << "\nCPU usage: " << adapter.getCpuLoadByProcess() << "%" << "\n-------------\n";
-        //Sleep(500);
+        //if (wcscmp(adapter.getCurProcName(), L"chrome.exe") == 0)
+        {
+            std::wcout << "ID: " << adapter.getCurProcID() << "\nName: " << adapter.getCurProcName() << "\nThreads: " << adapter.getCurProcThreadCnt() << "\nRAM usage: " << adapter.getRAMLoadByProcess() << "\n";
+            adapter.getCpuLoadByProcess();
+            Sleep(100);
+            double d = adapter.getCpuLoadByProcess();
+            std::wcout << "Interval CPU usage: " << d << "%\n-------------\n\n";
+        }
     } while (adapter.toNextProcessEntry() != 0);
     char procName[PROGRAMMNAMEMAXLEN];
     std::cout << "Active window process name: " << adapter.getProgrammNameByActiveWindow() << "\n";

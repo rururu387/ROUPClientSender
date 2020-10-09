@@ -1,12 +1,15 @@
 #pragma once
+#include <unordered_map>
 #include <windows.h>
 #include <pdh.h>
+#include <psapi.h>
 #include <tlhelp32.h>
 #include <string>
 
 #define DEBUG
 #ifdef  DEBUG
 #include <iostream>
+#include <chrono>
 template<typename T>
 void tprint(char spacer, T arg)
 {
@@ -34,9 +37,31 @@ public:
     const std::wstring what() { return whatStr; };
 };
 
+class ProcessCPUTime
+{
+public:
+    ULARGE_INTEGER procKernelTime;
+    ULARGE_INTEGER procUserTime;
+    ULARGE_INTEGER sysIdleTime;
+    ULARGE_INTEGER sysKernelTime;
+    ULARGE_INTEGER sysUserTime;
+public:
+    ProcessCPUTime(ULARGE_INTEGER procKernelTime, ULARGE_INTEGER procUserTime, ULARGE_INTEGER sysIdleTime, ULARGE_INTEGER sysKernelTime, ULARGE_INTEGER sysUserTime) : procKernelTime(procKernelTime), procUserTime(procUserTime), sysIdleTime(sysIdleTime), sysKernelTime(sysKernelTime), sysUserTime(sysUserTime) {};
+
+    void print()
+    {
+        std::cout << "ProcKernelTime: " << procKernelTime.QuadPart << "\t\n";// << procKernelTime.HighPart << "\t" << procKernelTime.LowPart << "\n";
+        std::cout << "ProcUserTime: " << procUserTime.QuadPart << "\t\n";// << procUserTime.HighPart << "\t" << procUserTime.LowPart << "\n";
+        std::cout << "SysIdleTime: " << sysIdleTime.QuadPart << "\t\n";// << sysIdleTime.HighPart << "\t" << sysIdleTime.LowPart << "\n";
+        std::cout << "SysKernelTime: " << sysKernelTime.QuadPart << "\t\n";// << sysKernelTime.HighPart << "\t" << sysKernelTime.LowPart << "\n";
+        std::cout << "SysUserTime: " << sysUserTime.QuadPart << "\t\n";// << sysUserTime.HighPart << "\t" << sysUserTime.LowPart << "\n";
+    };
+};
+
 class JNIWindowsSnapAdapter
 {
 private:
+    std::unordered_map<int, ProcessCPUTime> prevProcessesCPUTime;
     HANDLE hProcessesSnap;
     HANDLE hProcess;
     PROCESSENTRY32 pe32;
@@ -48,22 +73,9 @@ public:
     TCHAR* getCurProcName() { return pe32.szExeFile; };
     int getCurProcThreadCnt() { return pe32.cntThreads; };
     //Decide if we need all processes or parent only
-    int toNextProcessEntry(); 
-    //{ return Process32Next(hProcessesSnap, &pe32); OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pe32.th32ProcessID); };
+    int toNextProcessEntry();
     char* getProgrammNameByActiveWindow();
-    int getCpuLoadByProcess();
-    int64_t getRAMLoadByProcess();
+    double getCpuLoadByProcess();
+    size_t getRAMLoadByProcess();
     bool updateSnap();
 };
-
-/*class JNIWindowsQueryAdapter
-{
-private:
-    DWORD_PTR queryNumPtr;
-    PDH_HQUERY queryPtr;
-
-public:
-    JNIWindowsQueryAdapter() { queryNumPtr = NULL; queryPtr = {}; };
-    ~JNIWindowsQueryAdapter();
-    bool openRAMCPUQuery();
-};*/
