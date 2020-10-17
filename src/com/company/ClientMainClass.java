@@ -1,18 +1,13 @@
 package com.company;
 
-public class ClientMainClass
-{
-    static
-    {
-        System.loadLibrary("Main");
+public class ClientMainClass {
+    static {
+        System.loadLibrary("ClientMainClass");
     }
 
-    public static native void showString(String message);
+    private native void sayHello(String name);
 
-    public static void main(String[] args)
-    {
-        System.out.println("Hello World!");
-        showString("Hi!");
-        //System.loadLibrary("JniTest");
+    public static void main(String[] args) {
+        new ClientMainClass().sayHello("Dave");
     }
 }
