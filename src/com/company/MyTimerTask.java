@@ -8,12 +8,13 @@ import java.util.TimerTask;
 
 public class MyTimerTask  extends TimerTask {
     public ArrayList<String> Jsons;
+    private Gson gson;
     public  MyTimerTask(){
         Jsons=new ArrayList<>();
+        Gson gson =new Gson();
     }
     @Override
     public void run() {//this code will execute repeatedly with frequency n second
-        Gson gson =new Gson();
         Jsons.add( gson.toJson(getDataFromPC())) ;
         System.out.println(gson.toJson(getDataFromPC()));
         getDataFromPC().print();
