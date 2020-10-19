@@ -2,7 +2,6 @@ package com.company;
 
 import com.google.gson.Gson;
 
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimerTask;
@@ -13,20 +12,18 @@ public class MyTimerTask  extends TimerTask {
         Jsons=new ArrayList<>();
     }
     @Override
-    public void run() {
-        completeTask();
-        System.out.println("Some Data collected at "+new Date()+ "/♂");
+    public void run() {//this code will execute repeatedly with frequency n second
+        Gson gson =new Gson();
+        Jsons.add( gson.toJson(getDataFromPC())) ;
+        System.out.println(gson.toJson(getDataFromPC()));
+        getDataFromPC().print();
+        System.out.println("Some Data collected at "+new Date()+ "/♂\uD83D\uDE43");
     }
 
-    private void completeTask()
+    private DataPack getDataFromPC()
     {
-        Gson gson =new Gson();
         DataPack Dp=new DataPack();
         Dp.getInfo();
-        //Dp.print();
-        Jsons.add( gson.toJson(Dp)) ;
-        System.out.println(gson.toJson(Dp));
-        DataPack gsonDataPack=gson.fromJson(gson.toJson(Dp),DataPack.class);
-        gsonDataPack.print();
+        return  Dp;
     }
 }

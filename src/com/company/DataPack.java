@@ -2,24 +2,23 @@ package com.company;
 
 import java.util.ArrayList;
 
-public class DataPack {
+public class DataPack {//Class which contains gets and contains info about programs
 
     static {
-        System.loadLibrary("ClientMainClass");
+        System.loadLibrary("ClientMainClass");//including dll
     }
 
+    public ArrayList<ProgramClass>  programs;//list of programs
 
-    public ArrayList<ProgramClass>  programs;
-
-public DataPack()
+public DataPack()//this is Constructor👍🏻
 {
     programs =new ArrayList<ProgramClass>();
 }
     public void getInfo()
     {
 
-        JNIAdapter adapter = new JNIAdapter();
-        adapter.updateSnap();
+        JNIAdapter adapter = new JNIAdapter();//handling c++ code object
+        adapter.updateSnap();//update program list on os
         do {
             adapter.getCpuLoadByProcess();
         } while (adapter.toNextProcess());

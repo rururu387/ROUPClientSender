@@ -1,6 +1,6 @@
 package com.company;
 
-public class ProgramClass {
+public class ProgramClass {//class which contains ifo about program
     private String name;
     private long ID;
     private int threadAmout;
@@ -21,7 +21,7 @@ public class ProgramClass {
         return name;
     }
 
-    public void merge(long ID, int threadAmout, double cpuUsage,long ramUsage)
+    public void merge(long ID, int threadAmout, double cpuUsage,long ramUsage) //Method to merge Program with equal names
     {
         if(this.ID>ID)
             this.ID=ID;
