@@ -1,38 +1,28 @@
 package com.company;
 
+
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class ClientMainClass {
-    static {
-        System.loadLibrary("ClientMainClass");
-    }
 
     //private native void sayHello(String name);
 
-    public static void main(String[] args)
-    {
-        JNIAdapter adapter = new JNIAdapter();
-        adapter.updateSnap();
-        do {
-            adapter.getCpuLoadByProcess();
-        } while (adapter.toNextProcess() == true);
+
+    public static void main(String[] args) {
+        TimerTask timerTask = new MyTimerTask();
+
+        Timer timer = new Timer(true);
+        // будем запускать каждых 10 секунд (10 * 1000 миллисекунд)
+        timer.scheduleAtFixedRate(timerTask, 0, 20 * 1000);
+
         try {
-            Thread.sleep(1000);
+            Thread.sleep(70*1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        catch (java.lang.Exception e)
-        {
-            System.out.println(e);
-        }
-        adapter.updateSnap();
-        do {
-            System.out.println("ID: " + adapter.getCurProcID());
-            System.out.println("Name: " + adapter.getCurProcName());
-            System.out.println("Threads amount: " + adapter.getCurProcThreadCnt());
-            System.out.println("CPU usage: " + adapter.getCpuLoadByProcess() + "%");
-            System.out.println("RAM usage: " + adapter.getRAMLoadByProcess());
-            System.out.println("-----------------------");
-        } while (adapter.toNextProcess() == true);
-        System.out.println(adapter.getCurProcName());
-        System.out.println(adapter.getProgramNameByActiveWindow());
-        adapter.destructor();
-        System.out.println("Hello, world!");
+        timer.cancel();
+
     }
+
 }
