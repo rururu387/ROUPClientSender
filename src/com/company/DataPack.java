@@ -12,7 +12,7 @@ public class DataPack {//Class which contains gets and contains info about progr
 
 public DataPack()//this is Constructor👍🏻
 {
-    programs =new ArrayList<ProgramClass>();
+    programs =new ArrayList<>();
 }
     public void getInfo()
     {
@@ -35,10 +35,11 @@ public DataPack()//this is Constructor👍🏻
             if(buffRamUsage>0)
             {
                 String buffName=adapter.getCurProcName();
+                buffName=getNormalString(buffName);
                 ProgramClass bufProgram=isProcessAlreadyExist(buffName);
-                if(bufProgram==null) //there are no program in list with current name
+                if(bufProgram==null) //there are no program in the list with current name
                 { programs.add(new ProgramClass(buffName,adapter.getCurProcID(),adapter.getCurProcThreadCnt(),adapter.getCpuLoadByProcess(),buffRamUsage));
-                }else//there are  program in list with current name
+                }else//there are already program in the list with current name
                 {
                     bufProgram.merge(adapter.getCurProcID(),adapter.getCurProcThreadCnt(),adapter.getCpuLoadByProcess(),buffRamUsage);
                 }
@@ -70,6 +71,18 @@ public DataPack()//this is Constructor👍🏻
         for (ProgramClass pc:programs ) {
             pc.print();
         }
+    }
+
+    private String getNormalString(String str){//return string without \u0000
+        String res=new String();
+        for (char sym:str.toCharArray() ) {
+            if(sym!='\u0000')
+            {
+                res+=sym;
+            }
+            else break;
+        }
+        return res;
     }
 
 }
