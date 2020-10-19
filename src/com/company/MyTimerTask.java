@@ -11,7 +11,7 @@ public class MyTimerTask  extends TimerTask {
     private Gson gson;
     public  MyTimerTask(){
         Jsons=new ArrayList<>();
-        Gson gson =new Gson();
+        gson =new Gson();
     }
     @Override
     public void run() {//this code will execute repeatedly with frequency n second
