@@ -1,20 +1,18 @@
 package com.company;
-
 import java.util.ArrayList;
 
-public class DataPack {//Class which contains gets and contains info about programs
-
+public class DataPack {//Class which contains gets and contains info about program
     static {
         System.loadLibrary("ClientMainClass");//including dll
     }
-
+    public String userName;
     public ArrayList<ProgramClass>  programs;//list of programs
 
-public DataPack()//this is Constructor👍🏻
-{
-    programs =new ArrayList<>();
-}
-    public void getInfo()
+    public DataPack()//this is Constructor👍🏻
+    {
+        programs =new ArrayList<>();
+    }
+    public void getInfo() //Сбор информации
     {
 
         JNIAdapter adapter = new JNIAdapter();//handling c++ code object
@@ -45,14 +43,6 @@ public DataPack()//this is Constructor👍🏻
                 }
 
             }
-
-            /*System.out.println("ID: " + adapter.getCurProcID());
-            System.out.println("Name: " + adapter.getCurProcName());
-            System.out.println("Threads amount: " + adapter.getCurProcThreadCnt());
-            System.out.println("CPU usage: " + adapter.getCpuLoadByProcess() + "%");
-            System.out.println("RAM usage: " + adapter.getRAMLoadByProcess());
-            System.out.println("-----------------------");
-*/
         } while (adapter.toNextProcess());
         adapter.destructor();
     }
