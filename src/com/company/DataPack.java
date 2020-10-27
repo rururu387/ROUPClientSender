@@ -22,6 +22,12 @@ public class DataPack {//Class which contains gets and contains info about progr
         programs = new ArrayList<>();
     }
 
+    public DataPack(String userName)//this is Constructor👍🏻
+    {
+        this.userName = userName;
+        programs = new ArrayList<>();
+    }
+
     public void getInfo() //Сбор информации
     {
         JNIAdapter adapter = new JNIAdapter();//handling c++ code object
@@ -77,5 +83,4 @@ public class DataPack {//Class which contains gets and contains info about progr
         }
         return res;
     }
-
 }
