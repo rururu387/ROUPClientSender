@@ -9,6 +9,7 @@ public class DataPack {//Class which contains gets and contains info about progr
     }
 
     public String userName;
+    String activeWindow;
     public ArrayList<ProgramClass> programs;//list of programs
 
     public void setUserName(String userName)
@@ -32,6 +33,7 @@ public class DataPack {//Class which contains gets and contains info about progr
     {
         JNIAdapter adapter = new JNIAdapter();//handling c++ code object
         adapter.updateSnap();//update program list on os
+        activeWindow = getNormalString(adapter.getProgramNameByActiveWindow());
         do {
             adapter.getCpuLoadByProcess();
         } while (adapter.toNextProcess());
