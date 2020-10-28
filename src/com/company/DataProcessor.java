@@ -80,7 +80,6 @@ public class DataProcessor extends Thread {
     private DataPack getDataFromPC(String userName) {
         DataPack Dp = new DataPack(userName);
         Dp.getInfo();
-        System.out.println("!");
         //TODO add time mark
         return Dp;
     }

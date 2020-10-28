@@ -1,6 +1,7 @@
 package com.company;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class DataPack {//Class which contains gets and contains info about program
 
@@ -8,9 +9,11 @@ public class DataPack {//Class which contains gets and contains info about progr
         System.loadLibrary("ClientMainClass");//including dll
     }
 
-    public String userName;
-    String activeWindow;
-    public ArrayList<ProgramClass> programs;//list of programs
+
+    private String userName;
+    private Date creationDate;
+    private String activeWindow;
+    private ArrayList<ProgramClass> programs;//list of programs
 
     public void setUserName(String userName)
     {
@@ -60,6 +63,7 @@ public class DataPack {//Class which contains gets and contains info about progr
             }
         } while (adapter.toNextProcess());
         adapter.destructor();
+        creationDate = new Date(System.currentTimeMillis());
     }
 
     private ProgramClass isProcessAlreadyExist(String name) {
