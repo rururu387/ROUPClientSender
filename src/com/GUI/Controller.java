@@ -219,6 +219,8 @@ public class Controller {
         statusText.setFill(Paint.valueOf("#f8902f"));
         statusText.setText("Turn on");
         toggleButton.setImage(new Image(stylePath + "turnOffButtonSmall.png"));
+        nameField.setDisable(false);
+        passwordField.setDisable(false);
     }
 
     public void launchService(){
