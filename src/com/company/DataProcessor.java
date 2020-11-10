@@ -72,6 +72,7 @@ public class DataProcessor extends Thread {
             if (client != null) {
                 client.finishConnect();
                 client.close();
+                client = null;
             }
         }catch(IOException e){
         }
