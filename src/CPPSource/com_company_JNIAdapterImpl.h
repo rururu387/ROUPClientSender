@@ -212,6 +212,7 @@ wchar_t* JNIWindowsSnapAdapter::getProgramNameByActiveWindow()
 		}
 		else
 		{
+			//TODO - change & recompile
 			throw SnapError(L"Getting process name by active window error GetModuleBaseNameA -");
 			//if a variable is set to scilent
 			//std::wcerr << "Getting process name by active window error GetModuleBaseNameA faiked in process " << procId;

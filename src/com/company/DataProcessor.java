@@ -34,7 +34,7 @@ public class DataProcessor extends Thread {
             while (true) {
                 Gson gson = new Gson();
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
-                buffer.put(gson.toJson(getDataFromPC(userName)).getBytes());
+                buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName))).getBytes());
                 buffer.flip();
 
                 socketLocker.lock();

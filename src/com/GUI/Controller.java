@@ -13,7 +13,6 @@ import javafx.scene.text.Text;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -96,7 +95,7 @@ public class Controller {
     }
 
     @FXML
-    private void onToggleSwitch(@NotNull MouseEvent event) {
+    private void onToggleSwitch(MouseEvent event) {
         toggleSwitch();
     }
 
