@@ -1,6 +1,5 @@
 package com.GUI;
 
-import com.company.DataPack;
 import com.company.DataProcessor;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -15,6 +14,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.imageio.ImageIO;
@@ -31,7 +31,7 @@ public class Controller {
     private TextField nameField;
 
     @FXML
-    private TextField pathField;
+    private TextField passwordField;
 
     @FXML
     private Text statusText;
@@ -48,23 +48,28 @@ public class Controller {
     @FXML
     private ImageView closeButton;
 
+    @FXML
+    private Text errorMessage;
+
     private Stage window;
 
     private Mouse mouse = new Mouse();
 
-    //boolean isServiceToggledOff = true;
-
     private boolean isTrayIconExist = false;
+
+    private boolean isToggleInProcess = false;
 
     private Thread dataProcThread;
 
     private static final String stylePath = "com/GUI/style/";
 
-    public static final int PORT = 5020;
+    public static final String servAdr = "127.0.0.1";
+
+    public static final int servPort = 5020;
 
     public static final int INTERVAL = 10000;
 
-    private DataProcessor dataProcessor = new DataProcessor(PORT, INTERVAL);
+    private DataProcessor dataProcessor = new DataProcessor(INTERVAL);
 
     ReentrantLock socketLocker = new ReentrantLock();
 
@@ -85,24 +90,14 @@ public class Controller {
         }
     }
 
-    private void interruptService(){
-        //TODO send interrupt
-        try {
-            dataProcessor.BreakConnection(socketLocker);
-        }catch (IOException e)
-        {
-            System.out.println(e.toString());
-        }
-        if (!dataProcThread.isInterrupted())
-        {
-            dataProcThread.interrupt();
-        }
+    @FXML
+    private void onMinimizeReleased(MouseEvent event) {
+        ((Stage) (minimizeButton).getScene().getWindow()).setIconified(true);
     }
 
-    public void closeApp() {
-        interruptService();
-        Platform.exit();
-        System.exit(0);
+    @FXML
+    private void onToggleSwitch(@NotNull MouseEvent event) {
+        toggleSwitch();
     }
 
     //Modified source https://gist.github.com/jonyfs/b279b5e052c3b6893a092fed79aa7fbe#file-javafxtrayiconsample-java-L86
@@ -188,43 +183,83 @@ public class Controller {
         }
     }
 
-    private void toggleSwitch()
-    {
-        Image buttonImage = null;
-        if (dataProcessor.getIsServiceToggledOff()) {
-            Runnable dataProcRunnable = new Runnable() {
+    private void closeService(){
+        if (dataProcThread != null) {
+            try {
+                dataProcessor.BreakConnection(socketLocker);
+            } catch (IOException e) {
+                dataProcessor.interruptConnection();
+            }
+            if (!dataProcThread.isInterrupted()) {
+                Thread.UncaughtExceptionHandler h = (th, ex) -> {};
+                dataProcThread.setUncaughtExceptionHandler(h);
+                dataProcThread.interrupt();
+            }
+        }
+        dataProcThread = null;
+    }
+
+    public void closeApp() {
+        closeService();
+        Platform.exit();
+        System.exit(0);
+    }
+
+    public void onTurnedOn(){
+        dataProcessor.setIsServiceToggledOff(false);
+        statusText.setFill(Paint.valueOf("#9de05c"));
+        statusText.setText("Turn off");
+        toggleButton.setImage(new Image(stylePath + "turnOnButtonSmall.png"));
+        nameField.setDisable(true);
+        passwordField.setDisable(true);
+    }
+
+    public void onTurnedOff(){
+        dataProcessor.setIsServiceToggledOff(true);
+        statusText.setFill(Paint.valueOf("#f8902f"));
+        statusText.setText("Turn on");
+        toggleButton.setImage(new Image(stylePath + "turnOffButtonSmall.png"));
+    }
+
+    public void launchService(){
+        Thread.UncaughtExceptionHandler h = (th, ex) -> {
+            dataProcessor.interruptConnection();
+
+            errorMessage.setText("No internet connection");
+            errorMessage.setVisible(true);
+            onTurnedOff();
+        };
+
+        if (dataProcThread == null || !dataProcThread.isAlive()) {
+            dataProcThread = new Thread() {
                 @Override
                 public void run() {
-                    System.out.println(nameField.getText());
-                    dataProcessor.run(nameField.getText(), socketLocker);
+                    try {
+                        dataProcessor.run(nameField.getText(), servAdr, servPort, socketLocker);
+                    } catch (IOException e) {
+                        //I hate this thing =(
+                        //Was stuck here for hours
+                        throw new RuntimeException();
+                    }
                 }
             };
-            dataProcThread = new Thread(dataProcRunnable);
+            dataProcThread.setUncaughtExceptionHandler(h);
             dataProcThread.start();
+        }
+    }
 
-            statusText.setFill(Paint.valueOf("#9de05c"));
-            statusText.setText("Turn off");
-            buttonImage = new Image(stylePath + "turnOnButtonSmall.png");
+    public int cnt = 0;
+
+    private void toggleSwitch()
+    {
+        if (dataProcessor.getIsServiceToggledOff()) {
+            onTurnedOn();
+            launchService();
         }
         else {
-            interruptService();
-
-            statusText.setFill(Paint.valueOf("#f8902f"));
-            statusText.setText("Turn on");
-            buttonImage = new Image(stylePath + "turnOffButtonSmall.png");
+            onTurnedOff();
+            closeService();
         }
-        //isServiceToggledOff = !isServiceToggledOff;
-        toggleButton.setImage(buttonImage);
-    }
-
-    @FXML
-    private void onMinimizeReleased(MouseEvent event) {
-        ((Stage) (minimizeButton).getScene().getWindow()).setIconified(true);
-    }
-
-    @FXML
-    private void onToggleSwitch(@NotNull MouseEvent event) {
-        toggleSwitch();
     }
 
     public void initialize()
@@ -238,11 +273,16 @@ public class Controller {
             }
         });
         titleBar.setOnMouseDragged(new EventHandler<MouseEvent>() {
-
             @Override
             public void handle(MouseEvent t) {
                 titleBar.getScene().getWindow().setX(t.getScreenX() - mouse.getX());
                 titleBar.getScene().getWindow().setY(t.getScreenY() - mouse.getY());
+            }
+        });
+        pane.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent t) {
+                errorMessage.setVisible(false);
             }
         });
     }

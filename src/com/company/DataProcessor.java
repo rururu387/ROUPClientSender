@@ -11,9 +11,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DataProcessor extends Thread {
     private static BufferedReader readCl;
-    private int PORT;
     private long time_interval;
-    private SocketChannel client;
+    private SocketChannel client = null;
     private boolean isServiceToggledOff = true;
 
     public boolean getIsServiceToggledOff() {
@@ -24,17 +23,14 @@ public class DataProcessor extends Thread {
         this.isServiceToggledOff = isServiceToggledOff;
     }
 
-    public DataProcessor(int PORT, long time_interval) {
-        this.PORT = PORT;
+    public DataProcessor(long time_interval) {
         this.time_interval = time_interval;
         start();
     }
 
-    public void run(String userName, ReentrantLock socketLocker) {
-        isServiceToggledOff = false;
-        System.out.println(currentThread().getId() + " start with interval");
+    public void run(String userName, String servAdr, int servPort, ReentrantLock socketLocker) throws IOException{
         try {
-            client = SocketChannel.open(new InetSocketAddress("127.0.0.1", PORT));
+            client = SocketChannel.open(new InetSocketAddress(servAdr, servPort));
             while (true) {
                 Gson gson = new Gson();
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
@@ -42,39 +38,48 @@ public class DataProcessor extends Thread {
                 buffer.flip();
 
                 socketLocker.lock();
-                if (!isServiceToggledOff && client.isOpen()) {
+                if (!isServiceToggledOff) {
                     client.write(buffer);
                 }
                 socketLocker.unlock();
 
                 Thread.sleep(time_interval);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println(currentThread().getId() + " net exception");
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             /*e.printStackTrace();
             System.out.println(currentThread().getId() + " sleep() exception");*/
         }
     }
 
     public void BreakConnection(ReentrantLock socketLocker) throws IOException {
-        isServiceToggledOff = true;
         String end_msg = "EndThisConnection";
+        //TODO - resolve bug
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         buffer.put(end_msg.getBytes());
         buffer.flip();
 
         socketLocker.lock();
-        client.write(buffer);
-        client.finishConnect();
+        if (client != null && client.isOpen()) {
+            client.write(buffer);
+            client.finishConnect();
+        }
         socketLocker.unlock();
     }
 
+    public void interruptConnection(){
+        try {
+            if (client != null) {
+                client.finishConnect();
+                client.close();
+            }
+        }catch(IOException e){
+        }
+    }
+
     private DataPack getDataFromPC(String userName) {
-        DataPack Dp = new DataPack();
+        DataPack Dp = new DataPack(userName);
         Dp.getInfo();
-        Dp.setUserName(userName);
         //TODO add time mark
         return Dp;
     }

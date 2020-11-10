@@ -7,10 +7,10 @@ public class ProgramClass {//class which contains info about program
     private double cpuUsage;
     private long ramUsage;
 
-    public ProgramClass(String name, long ID, int threadAmout, double cpuUsage, long ramUsage) {
+    public ProgramClass(String name, long ID, int threadAmount, double cpuUsage, long ramUsage) {
         this.name = name;
         this.ID = ID;
-        this.threadAmount = threadAmout;
+        this.threadAmount = threadAmount;
         this.cpuUsage = cpuUsage;
         this.ramUsage = ramUsage;
     }
