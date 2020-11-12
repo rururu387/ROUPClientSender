@@ -1,6 +1,9 @@
 package com.company;
 
+import com.GUI.Controller;
 import com.google.gson.Gson;
+import javafx.scene.control.Control;
+import javafx.scene.paint.Paint;
 
 import javax.sound.sampled.Port;
 import java.io.*;
@@ -11,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DataProcessor extends Thread {
     private static BufferedReader readCl;
-    private long time_interval;
+    private int collectInterval;
     private SocketChannel client = null;
     private boolean isServiceToggledOff = true;
 
@@ -23,18 +26,18 @@ public class DataProcessor extends Thread {
         this.isServiceToggledOff = isServiceToggledOff;
     }
 
-    public DataProcessor(long time_interval) {
-        this.time_interval = time_interval;
+    public DataProcessor(int collectInterval) {
+        this.collectInterval = collectInterval;
         start();
     }
 
-    public void run(String userName, String servAdr, int servPort, ReentrantLock socketLocker) throws IOException{
+    public void run(String userName, String servAdr, int servPort, ReentrantLock socketLocker) throws IOException {
         try {
             client = SocketChannel.open(new InetSocketAddress(servAdr, servPort));
             while (true) {
                 Gson gson = new Gson();
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
-                buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName))).getBytes());
+                buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName, collectInterval))).getBytes());
                 buffer.flip();
 
                 socketLocker.lock();
@@ -43,13 +46,10 @@ public class DataProcessor extends Thread {
                 }
                 socketLocker.unlock();
 
-                Thread.sleep(time_interval);
+                Thread.sleep(collectInterval);
             }
         }
-        catch (InterruptedException e) {
-            /*e.printStackTrace();
-            System.out.println(currentThread().getId() + " sleep() exception");*/
-        }
+        catch (InterruptedException e) {}
     }
 
     public void BreakConnection(ReentrantLock socketLocker) throws IOException {
@@ -78,10 +78,19 @@ public class DataProcessor extends Thread {
         }
     }
 
-    private DataPack getDataFromPC(String userName) {
+    public void setCollectInterval(int collectInterval){
+        //Thread sleeps inside getDataFromPC() -> Dp.getInfo for a second to retrieve precised CPU usage data
+        if(collectInterval < 1500) {
+            Controller.getInstance().showErrorMessage("Please set interval >= 1500 ms.\nCool your PC) Value 1500ms set.", Paint.valueOf("#9de05c"));
+            this.collectInterval = 500;
+        }
+        else
+            this.collectInterval = collectInterval - DataPack.CPUMeasureTime;
+    }
+
+    private DataPack getDataFromPC(String userName, int collectInterval) {
         DataPack Dp = new DataPack(userName);
-        Dp.getInfo();
-        //TODO add time mark
+        Dp.getInfo(collectInterval);
         return Dp;
     }
 

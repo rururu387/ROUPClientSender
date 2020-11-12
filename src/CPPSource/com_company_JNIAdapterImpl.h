@@ -212,15 +212,16 @@ wchar_t* JNIWindowsSnapAdapter::getProgramNameByActiveWindow()
 		}
 		else
 		{
-			//TODO - change & recompile
-			throw SnapError(L"Getting process name by active window error GetModuleBaseNameA -");
+			return L"Foreground process query error";
+			//throw SnapError(L"Getting process name by active window error GetModuleBaseNameA -");
 			//if a variable is set to scilent
 			//std::wcerr << "Getting process name by active window error GetModuleBaseNameA faiked in process " << procId;
 		}
 	}
 	catch (SnapError e)
 	{
-		MessageBox(NULL, e.what().c_str(), L"Warning!", MB_ICONEXCLAMATION | MB_OK);
+	    return L"Unknown program";
+		//MessageBox(NULL, e.what().c_str(), L"Warning!", MB_ICONEXCLAMATION | MB_OK);
 		//if a variable is set to scilent
 		//std::wcerr << e.what();
 		return const_cast<wchar_t*>(L"");
@@ -305,7 +306,7 @@ double JNIWindowsSnapAdapter::getCpuLoadByProcess()
 	}
 	catch (SnapError e)
 	{
-		MessageBox(NULL, e.what().c_str(), L"Warning!", MB_ICONEXCLAMATION | MB_OK);
+		//MessageBox(NULL, e.what().c_str(), L"Warning!", MB_ICONEXCLAMATION | MB_OK);
 		return -1;
 	}
 	return -1;

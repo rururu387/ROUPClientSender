@@ -22,6 +22,7 @@ import java.awt.event.MouseAdapter;
 import java.io.File;
 import java.io.IOException;
 
+//Class-singleton
 public class Controller {
     @FXML
     private AnchorPane pane;
@@ -56,9 +57,9 @@ public class Controller {
 
     private boolean isTrayIconExist = false;
 
-    private boolean isToggleInProcess = false;
-
     private Thread dataProcThread;
+
+    private static Controller thisController = null;
 
     private static final String stylePath = "com/GUI/style/";
 
@@ -66,9 +67,9 @@ public class Controller {
 
     public static final int servPort = 5020;
 
-    public static final int INTERVAL = 10000;
+    public static final int DEFAULTINTERVAL = 10000;
 
-    private DataProcessor dataProcessor = new DataProcessor(INTERVAL);
+    private DataProcessor dataProcessor = new DataProcessor(DEFAULTINTERVAL);
 
     ReentrantLock socketLocker = new ReentrantLock();
 
@@ -97,6 +98,21 @@ public class Controller {
     @FXML
     private void onToggleSwitch(MouseEvent event) {
         toggleSwitch();
+    }
+
+    public static Controller getInstance(){
+        return thisController;
+    }
+
+    public void showErrorMessage(String error){
+        errorMessage.setText(error);
+        errorMessage.setVisible(true);
+    }
+
+    public void showErrorMessage(String error, Paint paint){
+        errorMessage.setText(error);
+        errorMessage.setFill(paint);
+        errorMessage.setVisible(true);
     }
 
     //Modified source https://gist.github.com/jonyfs/b279b5e052c3b6893a092fed79aa7fbe#file-javafxtrayiconsample-java-L86
@@ -170,8 +186,9 @@ public class Controller {
             // add the application tray icon to the system tray.
             tray.add(trayIcon);
         } catch (AWTException | IOException e) {
-            System.out.println("Unable to init system tray");
-            e.printStackTrace();
+            //Show window
+            ((Stage) (closeButton).getScene().getWindow()).show();
+            showErrorMessage("Couldn't minimize application to tray");
         }
     }
 
@@ -225,9 +242,7 @@ public class Controller {
     public void launchService(){
         Thread.UncaughtExceptionHandler h = (th, ex) -> {
             dataProcessor.interruptConnection();
-
-            errorMessage.setText("No internet connection");
-            errorMessage.setVisible(true);
+            showErrorMessage("No connection to server");
             onTurnedOff();
         };
 
@@ -249,8 +264,6 @@ public class Controller {
         }
     }
 
-    public int cnt = 0;
-
     private void toggleSwitch()
     {
         if (dataProcessor.getIsServiceToggledOff()) {
@@ -265,6 +278,7 @@ public class Controller {
 
     public void initialize()
     {
+        thisController = this;
         titleBar.setOnMousePressed(new EventHandler<MouseEvent>() {
 
             @Override
