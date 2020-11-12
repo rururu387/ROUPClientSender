@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     com_company_JNIAdapter
+ * Method:    getSizeTMax
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_com_company_JNIAdapter_getSizeTMax
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_company_JNIAdapter
  * Method:    callConstructor
  * Signature: ()J
  */

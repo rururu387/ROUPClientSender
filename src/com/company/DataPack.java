@@ -1,5 +1,7 @@
 package com.company;
 
+import com.GUI.Controller;
+
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -9,11 +11,11 @@ public class DataPack {//Class which contains gets and contains info about progr
         System.loadLibrary("ClientMainClass");//including dll
     }
 
-
     private String userName;
     private Date creationDate;
     private String activeWindow;
     private ArrayList<ProgramClass> programs;//list of programs
+    public static final int CPUMeasureTime = 1000;
 
     public void setUserName(String userName)
     {
@@ -32,32 +34,50 @@ public class DataPack {//Class which contains gets and contains info about progr
         programs = new ArrayList<>();
     }
 
-    public void getInfo() //Сбор информации
+    public void getInfo(int collectInterval) //Сбор информации
     {
         JNIAdapter adapter = new JNIAdapter();//handling c++ code object
         adapter.updateSnap();//update program list on os
+
         activeWindow = getNormalString(adapter.getProgramNameByActiveWindow());
+        if (activeWindow == "Unknown program"){
+            Controller.getInstance().showErrorMessage("Couldn't get foreground program name.\n It's OS-protected");
+        }
+        else if (activeWindow == "Foreground process query error"){
+            Controller.getInstance().showErrorMessage("Foreground program query error!");
+            activeWindow = "Unknown program";
+        }
+
         do {
             adapter.getCpuLoadByProcess();
         } while (adapter.toNextProcess());
         try {
-            Thread.sleep(1000);
+            Thread.sleep(CPUMeasureTime);
         } catch (java.lang.Exception e) {
             System.out.println(e);
         }
         adapter.updateSnap();
+        long buffSizeTMax = adapter.getSizeTMax();
         do {
             long buffRamUsage = adapter.getRAMLoadByProcess();
+            double buffCpuLoadByProcess = adapter.getCpuLoadByProcess();
             if (buffRamUsage > 0) {
                 String buffName = adapter.getCurProcName();
                 buffName = getNormalString(buffName);
                 ProgramClass bufProgram = isProcessAlreadyExist(buffName);
-                if (bufProgram == null) //there are no program in the list with current name
+
+                if (bufProgram == null) //there is no program in the list with current name
                 {
-                    programs.add(new ProgramClass(buffName, adapter.getCurProcID(), adapter.getCurProcThreadCnt(), adapter.getCpuLoadByProcess(), buffRamUsage));
-                } else//there are already program in the list with current name
+                    programs.add(new ProgramClass(buffName, adapter.getCurProcID(), adapter.getCurProcThreadCnt(), buffCpuLoadByProcess, buffRamUsage));
+                } else//there already is a program in the list with current name
                 {
-                    bufProgram.merge(adapter.getCurProcID(), adapter.getCurProcThreadCnt(), adapter.getCpuLoadByProcess(), buffRamUsage);
+                    if (buffCpuLoadByProcess == -1){
+                        Controller.getInstance().showErrorMessage("Could not get CPU load of\nsome process(-es)");
+                    }
+                    if (buffRamUsage == buffSizeTMax){
+                        Controller.getInstance().showErrorMessage("Could not get RAM usage of\nsome process(-es)");
+                    }
+                    bufProgram.merge(adapter.getCurProcID(), adapter.getCurProcThreadCnt(), buffCpuLoadByProcess, buffRamUsage);
                 }
 
             }

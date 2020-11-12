@@ -103,7 +103,7 @@ JNIEXPORT jint JNICALL Java_com_company_JNIAdapter_getCurProcThreadCnt
  * Class:     com_company_JNIAdapter
  * Method:    getProgramNameByActiveWindow
  * Signature: (J)[C
- * Returns process that owns current active window
+ * Returns process thaJava_com_company_JNIAdapter_getProgramNameByActiveWindowt owns current active window
  * Function can't get name of a priveleged (run as administrator) process.
  * It opens process inside to get it's name
  * Returns "" on failure
@@ -131,9 +131,23 @@ JNIEXPORT jdouble JNICALL Java_com_company_JNIAdapter_getCpuLoadByProcess
 
 /*
  * Class:     com_company_JNIAdapter
+ * Method:    getSizeTMax
+ * Signature: (J)J
+ * Returns amount of RAM used by current process, in MB
+ * Returns SIZE_MAX on fail
+ */
+JNIEXPORT jlong JNICALL Java_com_company_JNIAdapter_getSizeTMax
+  (JNIEnv *, jobject)
+{
+	return static_cast<jlong>(SIZE_MAX);
+}
+
+/*
+ * Class:     com_company_JNIAdapter
  * Method:    getRAMLoadByProcess
  * Signature: (J)J
  * Returns amount of RAM used by current process, in MB
+ * Returns SIZE_MAX on fail
  */
 JNIEXPORT jlong JNICALL Java_com_company_JNIAdapter_getRAMLoadByProcess
 	(JNIEnv *env, jobject object, jlong pointer)
