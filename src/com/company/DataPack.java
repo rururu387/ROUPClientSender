@@ -13,8 +13,9 @@ public class DataPack {//Class which contains gets and contains info about progr
 
     private String userName;
     private Date creationDate;
-    private String activeWindow;
+    private String activeWindowProcessName;
     private ArrayList<ProgramClass> programs;//list of programs
+    private int collectInterval;
     public static final int CPUMeasureTime = 1000;
 
     public void setUserName(String userName)
@@ -36,16 +37,17 @@ public class DataPack {//Class which contains gets and contains info about progr
 
     public void getInfo(int collectInterval) //Сбор информации
     {
+        this.collectInterval = collectInterval;
         JNIAdapter adapter = new JNIAdapter();//handling c++ code object
         adapter.updateSnap();//update program list on os
 
-        activeWindow = getNormalString(adapter.getProgramNameByActiveWindow());
-        if (activeWindow == "Unknown program"){
+        activeWindowProcessName = getNormalString(adapter.getProgramNameByActiveWindow());
+        if (activeWindowProcessName == "Unknown program"){
             Controller.getInstance().showErrorMessage("Couldn't get foreground program name.\n It's OS-protected");
         }
-        else if (activeWindow == "Foreground process query error"){
+        else if (activeWindowProcessName == "Foreground process query error"){
             Controller.getInstance().showErrorMessage("Foreground program query error!");
-            activeWindow = "Unknown program";
+            activeWindowProcessName = "Unknown program";
         }
 
         do {

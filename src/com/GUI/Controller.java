@@ -104,12 +104,12 @@ public class Controller {
         return thisController;
     }
 
-    public void showErrorMessage(String error){
+    public void showErrorMessage(String error) {
         errorMessage.setText(error);
         errorMessage.setVisible(true);
     }
 
-    public void showErrorMessage(String error, Paint paint){
+    public void showErrorMessage(String error, Paint paint) {
         errorMessage.setText(error);
         errorMessage.setFill(paint);
         errorMessage.setVisible(true);
