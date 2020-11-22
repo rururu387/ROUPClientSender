@@ -11,13 +11,9 @@ public class JNIAdapter {
         callDestructor(nClassPointer);
     }
 
-    public long getCurProcID() {
-        return getCurProcID(nClassPointer);
-    }
+    public long getCurProcID() { return getCurProcID(nClassPointer); }
 
-    public String getCurProcName() {
-        return getCurProcName(nClassPointer);
-    }
+    public String getCurProcName() { return getCurProcName(nClassPointer); }
 
     public int getCurProcThreadCnt() {
         return getCurProcThreadCnt(nClassPointer);
@@ -31,6 +27,8 @@ public class JNIAdapter {
         return getCpuLoadByProcess(nClassPointer);
     }
 
+    public native long getSizeTMax();
+
     public long getRAMLoadByProcess() {
         return getRAMLoadByProcess(nClassPointer);
     }
@@ -39,9 +37,7 @@ public class JNIAdapter {
         return toNextProcess(nClassPointer);
     }
 
-    public boolean updateSnap() {
-        return updateSnap(nClassPointer);
-    }
+    public boolean updateSnap() { return updateSnap(nClassPointer); }
 
     private native long callConstructor();
 
