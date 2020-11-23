@@ -1,15 +1,21 @@
 package com.company;
 
 import com.GUI.Controller;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import javafx.scene.control.Control;
 import javafx.scene.paint.Paint;
 
 import javax.sound.sampled.Port;
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.*;
 import java.net.*;
 import java.nio.channels.SocketChannel;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class DataProcessor extends Thread {
@@ -35,7 +41,14 @@ public class DataProcessor extends Thread {
         try {
             client = SocketChannel.open(new InetSocketAddress(servAdr, servPort));
             while (true) {
-                Gson gson = new Gson();
+                Gson gson = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+                    @Override
+                    public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
+                        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT);
+                        return new JsonPrimitive(formatter.format(src));
+                    }
+                }).create();
+
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
                 buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName, collectInterval))).getBytes());
                 buffer.flip();

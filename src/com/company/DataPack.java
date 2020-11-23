@@ -2,8 +2,8 @@ package com.company;
 
 import com.GUI.Controller;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class DataPack {//Class which contains gets and contains info about program
 
@@ -12,7 +12,7 @@ public class DataPack {//Class which contains gets and contains info about progr
     }
 
     private String userName;
-    private Date creationDate;
+    private LocalDateTime creationDate;
     private String activeWindowProcessName;
     private ArrayList<ProgramClass> programs;//list of programs
     private int collectInterval;
@@ -85,7 +85,7 @@ public class DataPack {//Class which contains gets and contains info about progr
             }
         } while (adapter.toNextProcess());
         adapter.destructor();
-        creationDate = new Date(System.currentTimeMillis());
+        creationDate = LocalDateTime.now();
     }
 
     private ProgramClass isProcessAlreadyExist(String name) {
