@@ -50,7 +50,14 @@ public class DataProcessor extends Thread {
                 }).create();
 
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
-                buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName, collectInterval))).getBytes());
+                try {
+                    buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName, collectInterval))).getBytes());
+                }
+                catch (java.nio.BufferOverflowException | java.nio.ReadOnlyBufferException e) {
+                    //TODO - handle error correctly
+                    Controller.getInstance().showErrorMessage("Could not put message to buffer");
+                    return;
+                }
                 buffer.flip();
 
                 socketLocker.lock();

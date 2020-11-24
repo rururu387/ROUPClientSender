@@ -97,6 +97,10 @@ public class DataPack {//Class which contains gets and contains info about progr
     }
 
     public void print() {
+        System.out.println("User name: " + userName);
+        System.out.println("creationTime: " + creationDate);
+        System.out.println("activeWindowProcessName: " + activeWindowProcessName);
+        System.out.println("collectInterval: " + collectInterval);
         for (ProgramClass pc : programs) {
             pc.print();
         }
