@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
+<?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.Image?>
@@ -18,7 +19,7 @@
    <children>
       <VBox prefHeight="230.0" prefWidth="400.0">
          <children>
-            <HBox fx:id="titleBar" alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="400.0" style="-fx-background-color: #585858;">
+            <HBox fx:id="titleBar" alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="400.0" style="-fx-background-color: #585858; -fx-border-color: #696969;">
                <cursor>
                   <Cursor fx:constant="MOVE" />
                </cursor>
@@ -62,6 +63,9 @@
                                  <VBox.margin>
                                     <Insets bottom="10.0" left="20.0" right="10.0" />
                                  </VBox.margin>
+                                 <effect>
+                                    <DropShadow />
+                                 </effect>
                               </TextField>
                            </children>
                         </VBox>
@@ -75,11 +79,14 @@
                                     <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
                                  </VBox.margin>
                               </Text>
-                              <TextField fx:id="passwordField" style="-fx-background-color: #585858; -fx-text-inner-color: #DEDEDE;">
+                              <PasswordField fx:id="passwordField" style="-fx-background-color: #585858;">
                                  <VBox.margin>
                                     <Insets bottom="10.0" left="20.0" right="10.0" />
                                  </VBox.margin>
-                              </TextField>
+                                 <effect>
+                                    <DropShadow />
+                                 </effect>
+                              </PasswordField>
                            </children>
                         </VBox>
                      </children>
@@ -107,6 +114,9 @@
                            <image>
                               <Image url="@style/turnOffButtonSmall.png" />
                            </image>
+                           <effect>
+                              <DropShadow color="#de9e6680" />
+                           </effect>
                         </ImageView>
                         <Text fx:id="errorMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0" text="No internet connection" visible="false">
                            <VBox.margin>

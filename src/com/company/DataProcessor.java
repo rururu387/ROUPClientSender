@@ -2,26 +2,20 @@ package com.company;
 
 import com.GUI.Controller;
 import com.google.gson.*;
-import javafx.scene.control.Control;
 import javafx.scene.paint.Paint;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import javax.sound.sampled.Port;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.*;
 import java.net.*;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Base64;
@@ -49,7 +43,7 @@ public class DataProcessor extends Thread {
     public byte[] getPBKDF2SecurePassword(String password) {
         try {
             byte[] salt;
-            if (Controller.getInstance().getUserName().getBytes().equals("".getBytes())) {
+            if (Controller.getInstance().getUserName().equals("")) {
                 //TODO - delete this when debug not needed
                 salt = "defaultPassword".getBytes();
             } else {
@@ -59,12 +53,17 @@ public class DataProcessor extends Thread {
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
             return factory.generateSecret(spec).getEncoded();
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            Controller.getInstance().showErrorMessage("Can't encrypt password");
+            Controller.getInstance().showErrorMessage("Can't encrypt password:\nAlgorithm or KeySpec exception");
+            Controller.getInstance().onTurnedOff();
+            return null;
+        } catch (Exception e) {
+            Controller.getInstance().showErrorMessage("Can't encrypt password\nUnknown reason");
+            Controller.getInstance().onTurnedOff();
             return null;
         }
     }
 
-    //Function to debug password processing
+    /*//Function to debug password processing
     private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);
     public static String bytesToHex(byte[] bytes) {
         byte[] hexChars = new byte[bytes.length * 2];
@@ -74,10 +73,13 @@ public class DataProcessor extends Thread {
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
         return new String(hexChars, StandardCharsets.UTF_8);
-    }
+    }*/
 
     public void run(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) throws IOException {
         byte[] securedPassword = getPBKDF2SecurePassword(password);
+        if (securedPassword == null) {
+            interruptConnection();
+        }
         try {
             client = SocketChannel.open(new InetSocketAddress(servAdr, servPort));
             while (true) {
@@ -92,7 +94,7 @@ public class DataProcessor extends Thread {
                 gsonBuilder.registerTypeAdapter(byte[].class, new JsonSerializer<byte[]>() {
                     @Override
                     public JsonElement serialize(byte[] bytes, Type type, JsonSerializationContext jsonSerializationContext) {
-                        System.out.println(bytesToHex(bytes));
+                        //System.out.println(bytesToHex(bytes));
                         return new JsonPrimitive(Base64.getEncoder().encodeToString(bytes));
                     }
                 });
