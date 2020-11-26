@@ -35,7 +35,6 @@ public class Main extends Application {
             }
         });
 
-        controller = new Controller();
         window.show();
     }
 

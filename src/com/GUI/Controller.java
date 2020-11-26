@@ -100,6 +100,12 @@ public class Controller {
         toggleSwitch();
     }
 
+    public String getUserName() {
+        if (nameField == null)
+            return null;
+        return nameField.getText();
+    }
+
     public static Controller getInstance(){
         return thisController;
     }
@@ -247,11 +253,12 @@ public class Controller {
         };
 
         if (dataProcThread == null || !dataProcThread.isAlive()) {
+            //Calculates password's sha-512 to secure password if compromised
             dataProcThread = new Thread() {
                 @Override
                 public void run() {
                     try {
-                        dataProcessor.run(nameField.getText(), servAdr, servPort, socketLocker);
+                        dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort, socketLocker);
                     } catch (IOException e) {
                         //I hate this thing =(
                         //Was stuck here for hours

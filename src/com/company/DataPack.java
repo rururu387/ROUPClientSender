@@ -12,6 +12,7 @@ public class DataPack {//Class which contains gets and contains info about progr
     }
 
     private String userName;
+    byte[] securedPassword;
     private LocalDateTime creationDate;
     private String activeWindowProcessName;
     private ArrayList<ProgramClass> programs;//list of programs
@@ -23,15 +24,10 @@ public class DataPack {//Class which contains gets and contains info about progr
         this.userName = userName;
     }
 
-
-    public DataPack()//this is Constructor👍🏻
-    {
-        programs = new ArrayList<>();
-    }
-
-    public DataPack(String userName)//this is Constructor👍🏻
+    public DataPack(String userName, byte[] securedPassword)//this is Constructor👍🏻
     {
         this.userName = userName;
+        this.securedPassword = securedPassword;
         programs = new ArrayList<>();
     }
 
