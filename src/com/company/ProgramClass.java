@@ -19,11 +19,11 @@ public class ProgramClass {//class which contains info about program
         return name;
     }
 
-    public void merge(long ID, int threadAmout, double cpuUsage, long ramUsage) //Method to merge Program with equal names
+    public void merge(long ID, int threadAmount, double cpuUsage, long ramUsage) //Method to merge Program with equal names
     {
         if (this.ID > ID)
             this.ID = ID;
-        this.threadAmount += threadAmout;
+        this.threadAmount += threadAmount;
         this.cpuUsage += cpuUsage;
         this.ramUsage += ramUsage;
     }

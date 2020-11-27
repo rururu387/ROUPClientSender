@@ -2,8 +2,8 @@ package com.company;
 
 import com.GUI.Controller;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class DataPack {//Class which contains gets and contains info about program
 
@@ -12,9 +12,11 @@ public class DataPack {//Class which contains gets and contains info about progr
     }
 
     private String userName;
-    private Date creationDate;
-    private String activeWindow;
+    byte[] securedPassword;
+    private LocalDateTime creationDate;
+    private String activeWindowProcessName;
     private ArrayList<ProgramClass> programs;//list of programs
+    private int collectInterval;
     public static final int CPUMeasureTime = 1000;
 
     public void setUserName(String userName)
@@ -22,30 +24,26 @@ public class DataPack {//Class which contains gets and contains info about progr
         this.userName = userName;
     }
 
-
-    public DataPack()//this is Constructor👍🏻
-    {
-        programs = new ArrayList<>();
-    }
-
-    public DataPack(String userName)//this is Constructor👍🏻
+    public DataPack(String userName, byte[] securedPassword)//this is Constructor👍🏻
     {
         this.userName = userName;
+        this.securedPassword = securedPassword;
         programs = new ArrayList<>();
     }
 
     public void getInfo(int collectInterval) //Сбор информации
     {
+        this.collectInterval = collectInterval;
         JNIAdapter adapter = new JNIAdapter();//handling c++ code object
         adapter.updateSnap();//update program list on os
 
-        activeWindow = getNormalString(adapter.getProgramNameByActiveWindow());
-        if (activeWindow == "Unknown program"){
+        activeWindowProcessName = getNormalString(adapter.getProgramNameByActiveWindow());
+        if (activeWindowProcessName == "Unknown program"){
             Controller.getInstance().showErrorMessage("Couldn't get foreground program name.\n It's OS-protected");
         }
-        else if (activeWindow == "Foreground process query error"){
+        else if (activeWindowProcessName == "Foreground process query error"){
             Controller.getInstance().showErrorMessage("Foreground program query error!");
-            activeWindow = "Unknown program";
+            activeWindowProcessName = "Unknown program";
         }
 
         do {
@@ -83,7 +81,7 @@ public class DataPack {//Class which contains gets and contains info about progr
             }
         } while (adapter.toNextProcess());
         adapter.destructor();
-        creationDate = new Date(System.currentTimeMillis());
+        creationDate = LocalDateTime.now();
     }
 
     private ProgramClass isProcessAlreadyExist(String name) {
@@ -95,6 +93,10 @@ public class DataPack {//Class which contains gets and contains info about progr
     }
 
     public void print() {
+        System.out.println("User name: " + userName);
+        System.out.println("creationTime: " + creationDate);
+        System.out.println("activeWindowProcessName: " + activeWindowProcessName);
+        System.out.println("collectInterval: " + collectInterval);
         for (ProgramClass pc : programs) {
             pc.print();
         }

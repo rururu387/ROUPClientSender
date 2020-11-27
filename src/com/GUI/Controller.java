@@ -5,9 +5,12 @@ import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.scene.image.Image;
@@ -74,7 +77,7 @@ public class Controller {
     ReentrantLock socketLocker = new ReentrantLock();
 
     @FXML
-    private void onCloseReleased(MouseEvent event) {
+    private void onCloseClicked(MouseEvent event) {
         window = (Stage) (closeButton).getScene().getWindow();
         if (dataProcessor.getIsServiceToggledOff())
         {
@@ -91,7 +94,7 @@ public class Controller {
     }
 
     @FXML
-    private void onMinimizeReleased(MouseEvent event) {
+    private void onMinimizeClicked(MouseEvent event) {
         ((Stage) (minimizeButton).getScene().getWindow()).setIconified(true);
     }
 
@@ -100,16 +103,22 @@ public class Controller {
         toggleSwitch();
     }
 
+    public String getUserName() {
+        if (nameField == null)
+            return null;
+        return nameField.getText();
+    }
+
     public static Controller getInstance(){
         return thisController;
     }
 
-    public void showErrorMessage(String error){
+    public void showErrorMessage(String error) {
         errorMessage.setText(error);
         errorMessage.setVisible(true);
     }
 
-    public void showErrorMessage(String error, Paint paint){
+    public void showErrorMessage(String error, Paint paint) {
         errorMessage.setText(error);
         errorMessage.setFill(paint);
         errorMessage.setVisible(true);
@@ -226,6 +235,8 @@ public class Controller {
         statusText.setFill(Paint.valueOf("#9de05c"));
         statusText.setText("Turn off");
         toggleButton.setImage(new Image(stylePath + "turnOnButtonSmall.png"));
+        DropShadow greenShadow = new DropShadow(BlurType.THREE_PASS_BOX, Color.rgb(157, 224, 92, 0.5), 10, 0, 0, 0);
+        toggleButton.setEffect(greenShadow);
         nameField.setDisable(true);
         passwordField.setDisable(true);
     }
@@ -235,6 +246,8 @@ public class Controller {
         statusText.setFill(Paint.valueOf("#f8902f"));
         statusText.setText("Turn on");
         toggleButton.setImage(new Image(stylePath + "turnOffButtonSmall.png"));
+        DropShadow orangeShadow = new DropShadow(BlurType.THREE_PASS_BOX, Color.rgb(221, 157, 102, 0.5), 10, 0, 0, 0);
+        toggleButton.setEffect(orangeShadow);
         nameField.setDisable(false);
         passwordField.setDisable(false);
     }
@@ -247,11 +260,12 @@ public class Controller {
         };
 
         if (dataProcThread == null || !dataProcThread.isAlive()) {
+            //Calculates password's sha-512 to secure password if compromised
             dataProcThread = new Thread() {
                 @Override
                 public void run() {
                     try {
-                        dataProcessor.run(nameField.getText(), servAdr, servPort, socketLocker);
+                        dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort, socketLocker);
                     } catch (IOException e) {
                         //I hate this thing =(
                         //Was stuck here for hours
@@ -276,24 +290,40 @@ public class Controller {
         }
     }
 
+    public boolean isContain (MouseEvent mouseEvent, ImageView image) {
+        if (mouseEvent.getX() >= image.getBoundsInParent().getCenterX() - (image.getFitWidth() / 2) && mouseEvent.getX() <= image.getBoundsInParent().getCenterX() + (image.getFitWidth() / 2) && mouseEvent.getY() >= image.getBoundsInParent().getCenterY() - (image.getFitHeight() / 2) && mouseEvent.getY() <= image.getBoundsInParent().getCenterY() + (image.getFitHeight() / 2)) {
+            return true;
+        }
+        return false;
+    }
+
     public void initialize()
     {
         thisController = this;
         titleBar.setOnMousePressed(new EventHandler<MouseEvent>() {
-
             @Override
             public void handle(MouseEvent t) {
-                mouse.setX(t.getX());
-                mouse.setY(t.getY());
+                if (isContain(t, minimizeButton) || isContain(t, closeButton)) {
+                    mouse.setX(-1);
+                    mouse.setY(-1);
+                }
+                else {
+                    mouse.setX(t.getX());
+                    mouse.setY(t.getY());
+                }
             }
         });
+
         titleBar.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent t) {
-                titleBar.getScene().getWindow().setX(t.getScreenX() - mouse.getX());
-                titleBar.getScene().getWindow().setY(t.getScreenY() - mouse.getY());
+                if (mouse.getX() != -1) {
+                    titleBar.getScene().getWindow().setX(t.getScreenX() - mouse.getX());
+                    titleBar.getScene().getWindow().setY(t.getScreenY() - mouse.getY());
+                }
             }
         });
+
         pane.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent t) {
