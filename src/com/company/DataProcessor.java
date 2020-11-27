@@ -40,10 +40,10 @@ public class DataProcessor extends Thread {
         start();
     }
 
-    public byte[] getPBKDF2SecurePassword(String password) {
+    public byte[] getPBKDF2SecurePassword(String userName, String password) {
         try {
             byte[] salt;
-            if (Controller.getInstance().getUserName().equals("")) {
+            if (userName.equals("")) {
                 //TODO - delete this when debug not needed
                 salt = "defaultPassword".getBytes();
             } else {
@@ -76,36 +76,35 @@ public class DataProcessor extends Thread {
     }*/
 
     public void run(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) throws IOException {
-        byte[] securedPassword = getPBKDF2SecurePassword(password);
+        byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
         if (securedPassword == null) {
             interruptConnection();
         }
         try {
             client = SocketChannel.open(new InetSocketAddress(servAdr, servPort));
+            GsonBuilder gsonBuilder = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+                @Override
+                public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT);
+                    return new JsonPrimitive(formatter.format(src));
+                }
+            });
+
+            gsonBuilder.registerTypeAdapter(byte[].class, new JsonSerializer<byte[]>() {
+                @Override
+                public JsonElement serialize(byte[] bytes, Type type, JsonSerializationContext jsonSerializationContext) {
+                    //System.out.println(bytesToHex(bytes));
+                    return new JsonPrimitive(Base64.getEncoder().encodeToString(bytes));
+                }
+            });
+            Gson gson = gsonBuilder.create();
             while (true) {
-                GsonBuilder gsonBuilder = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
-                    @Override
-                    public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT);
-                        return new JsonPrimitive(formatter.format(src));
-                    }
-                });
-
-                gsonBuilder.registerTypeAdapter(byte[].class, new JsonSerializer<byte[]>() {
-                    @Override
-                    public JsonElement serialize(byte[] bytes, Type type, JsonSerializationContext jsonSerializationContext) {
-                        //System.out.println(bytesToHex(bytes));
-                        return new JsonPrimitive(Base64.getEncoder().encodeToString(bytes));
-                    }
-                });
-
-                Gson gson = gsonBuilder.create();
 
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
                 try {
                     buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName, securedPassword, collectInterval))).getBytes());
-                }
-                catch (java.nio.BufferOverflowException | java.nio.ReadOnlyBufferException e) {
+
+                } catch (java.nio.BufferOverflowException | java.nio.ReadOnlyBufferException e) {
                     //TODO - handle error correctly
                     Controller.getInstance().showErrorMessage("Could not put message to buffer");
                     return;
@@ -118,15 +117,73 @@ public class DataProcessor extends Thread {
                 }
                 socketLocker.unlock();
 
+
                 Thread.sleep(collectInterval);
             }
+        } catch (InterruptedException e) {
         }
-        catch (InterruptedException e) {}
     }
+
+
+    public void register(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) throws IOException {
+        byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
+        if (securedPassword == null) {
+            interruptConnection();
+        }
+        try {
+            client = SocketChannel.open(new InetSocketAddress(servAdr, servPort));
+            GsonBuilder gsonBuilder = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+                @Override
+                public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT);
+                    return new JsonPrimitive(formatter.format(src));
+                }
+            });
+
+            gsonBuilder.registerTypeAdapter(byte[].class, new JsonSerializer<byte[]>() {
+                @Override
+                public JsonElement serialize(byte[] bytes, Type type, JsonSerializationContext jsonSerializationContext) {
+                    //System.out.println(bytesToHex(bytes));
+                    return new JsonPrimitive(Base64.getEncoder().encodeToString(bytes));
+                }
+            });
+            Gson gson = gsonBuilder.create();
+            while (true) {
+
+                ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
+                try {
+                    buffer.put(("Register client sender\n" + userName + "\n" + password + "\n").getBytes());
+                } catch (java.nio.BufferOverflowException | java.nio.ReadOnlyBufferException e) {
+                    //TODO - handle error correctly
+                    Controller.getInstance().showErrorMessage("Could not put message to buffer");
+                    return;
+                }
+                buffer.flip();
+
+                socketLocker.lock();
+                if (!isServiceToggledOff) {
+                    client.write(buffer);
+                }
+
+                client.read(buffer);
+                socketLocker.unlock();
+                String serverRespond = new String(buffer.array()).trim();
+                if (serverRespond.equals("Register successful")) {
+                    Controller.getInstance().showErrorMessage("Register successful", Paint.valueOf("#9de05c"));
+                } else if (serverRespond.equals("Register failed")) {
+                    Controller.getInstance().showErrorMessage("Register failed");
+                }
+
+
+                Thread.sleep(collectInterval);
+            }
+        } catch (InterruptedException e) {
+        }
+    }
+
 
     public void BreakConnection(ReentrantLock socketLocker) throws IOException {
         String end_msg = "EndThisConnection";
-        //TODO - resolve bug
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         buffer.put(end_msg.getBytes());
         buffer.flip();
