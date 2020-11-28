@@ -15,18 +15,23 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="230.0" prefWidth="400.0" style="-fx-background-color: #1e1e1e;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.GUI.Controller">
+<AnchorPane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+            prefHeight="300.0" prefWidth="400.0" style="-fx-background-color: #1e1e1e;"
+            xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.GUI.Controller">
    <children>
-      <VBox prefHeight="230.0" prefWidth="400.0">
+      <VBox prefHeight="300.0" prefWidth="400.0">
          <children>
-            <HBox fx:id="titleBar" alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="400.0" style="-fx-background-color: #585858; -fx-border-color: #696969;">
+            <HBox fx:id="titleBar" alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="400.0"
+                  style="-fx-background-color: #585858; -fx-border-color: #696969;">
                <cursor>
-                  <Cursor fx:constant="MOVE" />
+                  <Cursor fx:constant="MOVE"/>
                </cursor>
                <children>
-                  <ImageView fx:id="minimizeButton" fitHeight="30.0" fitWidth="30.0" onMouseClicked="#onMinimizeClicked">
+                  <ImageView fx:id="minimizeButton" fitHeight="30.0" fitWidth="30.0"
+                             onMouseClicked="#onMinimizeClicked">
                      <image>
-                        <Image url="@style/minimizeButton.png" />
+                        <Image url="@style/minimizeButton.png"/>
                      </image>
                      <cursor>
                         <Cursor fx:constant="DEFAULT" />
@@ -118,19 +123,38 @@
                               <DropShadow color="#de9e6680" />
                            </effect>
                         </ImageView>
-                        <Text fx:id="errorMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0" text="No internet connection" visible="false">
-                           <VBox.margin>
-                              <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                           </VBox.margin>
-                        </Text>
                      </children>
                      <opaqueInsets>
-                        <Insets />
+                        <Insets/>
                      </opaqueInsets>
                      <HBox.margin>
-                        <Insets />
+                        <Insets/>
                      </HBox.margin>
                   </VBox>
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <Text fx:id="errorMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0">
+                     <HBox.margin>
+                        <Insets right="150.0"/>
+                     </HBox.margin>
+                     <font>
+                        <Font size="16.0"/>
+                     </font>
+                  </Text>
+                  <ImageView fx:id="registerButton" fitHeight="44.0" fitWidth="44.0"
+                             onMouseReleased="#onRegisterReleased">
+                     <image>
+                        <Image url="@style/turnOffButtonSmall.png"/>
+                     </image>
+                     <effect>
+                        <DropShadow color="#de9e6680"/>
+                     </effect>
+                     <HBox.margin>
+                        <Insets right="20.0"/>
+                     </HBox.margin>
+                  </ImageView>
                </children>
             </HBox>
          </children>

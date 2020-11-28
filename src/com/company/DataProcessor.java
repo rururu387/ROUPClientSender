@@ -125,7 +125,7 @@ public class DataProcessor extends Thread {
     }
 
 
-    public void register(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) throws IOException {
+    public void register(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) {
         byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
         if (securedPassword == null) {
             interruptConnection();
@@ -178,6 +178,8 @@ public class DataProcessor extends Thread {
                 Thread.sleep(collectInterval);
             }
         } catch (InterruptedException e) {
+        } catch (IOException e) {
+            //TODO THIS IS ONLY for debug
         }
     }
 
