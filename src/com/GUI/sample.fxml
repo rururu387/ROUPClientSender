@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.Image?>
@@ -34,7 +35,7 @@
                         <Image url="@style/minimizeButton.png"/>
                      </image>
                      <cursor>
-                        <Cursor fx:constant="DEFAULT" />
+                        <Cursor fx:constant="DEFAULT"/>
                      </cursor>
                   </ImageView>
                   <ImageView fx:id="closeButton" fitHeight="30.0" fitWidth="30.0" onMouseClicked="#onCloseClicked">
@@ -133,30 +134,47 @@
                   </VBox>
                </children>
             </HBox>
-            <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0">
+            <VBox prefHeight="200.0" prefWidth="100.0">
                <children>
-                  <Text fx:id="errorMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0">
-                     <HBox.margin>
-                        <Insets right="150.0"/>
-                     </HBox.margin>
-                     <font>
-                        <Font size="16.0"/>
-                     </font>
-                  </Text>
-                  <ImageView fx:id="registerButton" fitHeight="44.0" fitWidth="44.0"
-                             onMouseReleased="#onRegisterReleased">
-                     <image>
-                        <Image url="@style/turnOffButtonSmall.png"/>
-                     </image>
-                     <effect>
-                        <DropShadow color="#de9e6680"/>
-                     </effect>
-                     <HBox.margin>
-                        <Insets right="20.0"/>
-                     </HBox.margin>
-                  </ImageView>
+                  <Separator prefWidth="200.0"
+                             style="-fx-border-color: #585858; -fx-border-width: 2; -fx-background-color: #585858;">
+                     <VBox.margin>
+                        <Insets top="15.0"/>
+                     </VBox.margin>
+                  </Separator>
+                  <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <HBox prefHeight="88.0" prefWidth="300.0">
+                           <children>
+                              <Text fx:id="errorMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0"
+                                    wrappingWidth="261.0">
+                                 <HBox.margin>
+                                    <Insets left="15.0" top="30.0"/>
+                                 </HBox.margin>
+                                 <font>
+                                    <Font size="16.0"/>
+                                 </font>
+                              </Text>
+                           </children>
+                        </HBox>
+                        <Separator orientation="VERTICAL" prefHeight="200.0">
+                           <padding>
+                              <Insets right="20.0"/>
+                           </padding>
+                        </Separator>
+                        <ImageView fx:id="registerButton" fitHeight="70.0" fitWidth="70.0"
+                                   onMouseReleased="#onRegisterReleased">
+                           <image>
+                              <Image url="@style/registerButton.png"/>
+                           </image>
+                           <HBox.margin>
+                              <Insets right="20.0"/>
+                           </HBox.margin>
+                        </ImageView>
+                     </children>
+                  </HBox>
                </children>
-            </HBox>
+            </VBox>
          </children>
       </VBox>
    </children>
