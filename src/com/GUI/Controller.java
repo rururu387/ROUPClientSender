@@ -261,27 +261,13 @@ public class Controller {
     }
 
     public void launchService(){
-        Thread.UncaughtExceptionHandler h = (th, ex) -> {
-            dataProcessor.interruptConnection();
-            showErrorMessage("No connection to server");
-            onTurnedOff();
-        };
-
         if (dataProcThread == null || !dataProcThread.isAlive()) {
-            //Calculates password's sha-512 to secure password if compromised
             dataProcThread = new Thread() {
                 @Override
                 public void run() {
-                    try {
-                        dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort, socketLocker);
-                    } catch (IOException e) {
-                        //I hate this thing =(
-                        //Was stuck here for hours
-                        throw new RuntimeException();
-                    }
+                    dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort, socketLocker);
                 }
             };
-            dataProcThread.setUncaughtExceptionHandler(h);
             dataProcThread.start();
         }
     }

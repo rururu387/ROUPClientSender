@@ -10,6 +10,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.*;
 import java.net.*;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -75,13 +76,20 @@ public class DataProcessor extends Thread {
         return new String(hexChars, StandardCharsets.UTF_8);
     }*/
 
-    public void run(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) throws IOException {
+    public void run(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) {
+
         byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
         if (securedPassword == null) {
             interruptConnection();
         }
         try {
-            client = SocketChannel.open(new InetSocketAddress(servAdr, servPort));
+            try {
+                client = SocketChannel.open(new InetSocketAddress(servAdr, servPort));
+            } catch (IOException e) {
+                Controller.getInstance().showErrorMessage("Could not establish connection\nServer may be down");
+                Controller.getInstance().onTurnedOff();
+                interruptConnection();
+            }
             GsonBuilder gsonBuilder = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
                 @Override
                 public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
@@ -99,37 +107,32 @@ public class DataProcessor extends Thread {
             });
             Gson gson = gsonBuilder.create();
             while (true) {
-
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
-                try {
-                    buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName, securedPassword, collectInterval))).getBytes());
-
-                } catch (java.nio.BufferOverflowException | java.nio.ReadOnlyBufferException e) {
-                    //TODO - handle error correctly
-                    Controller.getInstance().showErrorMessage("Could not put message to buffer");
-                    return;
-                }
+                buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName, securedPassword, collectInterval))).getBytes());
                 buffer.flip();
 
-                socketLocker.lock();
                 if (!isServiceToggledOff) {
-                    client.write(buffer);
+                    try {
+                        client.write(buffer);
+                    } catch (IOException e) {
+                        Controller.getInstance().showErrorMessage("Sending info to server failed\n retry in " + collectInterval / 1000 + "s");
+                    }
+                    buffer.clear();
+                    try {
+                        client.read(buffer);
+                    } catch(IOException error) {
+                        Controller.getInstance().showErrorMessage("Did not receive\nrespond from server");
+                    }
+                    String serverRespond = new String(buffer.array()).trim();
+                    if (serverRespond.startsWith("Data is being processed")) {
+                        Controller.getInstance().showErrorMessage("Login and password\nare correct", Paint.valueOf("#9de05c"));
+                    } else if (serverRespond.startsWith("Data is ignored")) {
+                        Controller.getInstance().showErrorMessage("Data is ignored\nCheck login and password");
+                        interruptConnection();
+                        Controller.getInstance().onTurnedOff();
+                        return;
+                    }
                 }
-                socketLocker.unlock();
-
-                ByteBuffer respondBuffer = ByteBuffer.allocate(1024);
-
-                try {
-                    client.read(respondBuffer);
-                } catch (IOException e) {
-                    Controller.getInstance().showErrorMessage("Error reading data from server\nRegister failed");
-                }
-
-                String serverRespond = new String(respondBuffer.array()).trim();
-
-                Controller.getInstance().showErrorMessage(serverRespond, Paint.valueOf("#9de05c"));
-
-
                 Thread.sleep(collectInterval);
             }
         } catch (InterruptedException e) {
@@ -159,25 +162,19 @@ public class DataProcessor extends Thread {
         }
         sendDataBuffer.flip();
         String clientData = new String(sendDataBuffer.array()).trim();
-        socketLocker.lock();
         try {
             client.write(sendDataBuffer);
         } catch (IOException e) {
             Controller.getInstance().showErrorMessage("Error writing data to server\nRegister failed");
             return;
         }
-
-        ByteBuffer respondBuffer = ByteBuffer.allocate(1024 * 10);
-
-
         try {
             client.read(respondBuffer);
         } catch (IOException e) {
             Controller.getInstance().showErrorMessage("Error reading data from server\nRegister failed");
             return;
         }
-
-        socketLocker.unlock();
+      
         String serverRespond = new String(respondBuffer.array()).trim();
         if (serverRespond.equals("Register successful")) {
             Controller.getInstance().showErrorMessage("Register successful", Paint.valueOf("#9de05c"));
@@ -188,18 +185,16 @@ public class DataProcessor extends Thread {
     }
 
 
-    public void BreakConnection(ReentrantLock socketLocker) throws IOException {
+    public void BreakConnection(Reentrant socketLocker) throws IOException {
         String end_msg = "EndThisConnection";
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         buffer.put(end_msg.getBytes());
         buffer.flip();
-
-        socketLocker.lock();
+      
         if (client != null && client.isOpen()) {
             client.write(buffer);
             client.finishConnect();
         }
-        socketLocker.unlock();
     }
 
     public void interruptConnection(){
