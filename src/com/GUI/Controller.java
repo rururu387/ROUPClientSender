@@ -54,6 +54,9 @@ public class Controller {
     @FXML
     private Text errorMessage;
 
+    @FXML
+    private ImageView registerButton;
+
     private Stage window;
 
     private Mouse mouse = new Mouse();
@@ -76,14 +79,19 @@ public class Controller {
 
     ReentrantLock socketLocker = new ReentrantLock();
 
+
+    @FXML
+    void onRegisterReleased(MouseEvent event) {
+        dataProcessor.register(nameField.getText(), passwordField.getText(), servAdr, servPort, socketLocker);
+    }
+
+
     @FXML
     private void onCloseClicked(MouseEvent event) {
         window = (Stage) (closeButton).getScene().getWindow();
-        if (dataProcessor.getIsServiceToggledOff())
-        {
+        if (dataProcessor.getIsServiceToggledOff()) {
             closeApp();
-        }
-        else
+        } else
         {
             window.hide();
             if (!isTrayIconExist) {

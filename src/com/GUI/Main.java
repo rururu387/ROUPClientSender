@@ -24,7 +24,7 @@ public class Main extends Application {
         window.getIcons().add(new Image(stylePath + "knifeGoose.png"));
         window.initStyle(StageStyle.TRANSPARENT);
 
-        Scene windowScene = new Scene(root, 400, 230);
+        Scene windowScene = new Scene(root, 400, 300);
         window.setResizable(false);
         window.setScene(windowScene);
 
