@@ -69,7 +69,7 @@ public class DataPack {//Class which contains gets and contains info about progr
                     programs.add(new ProgramClass(buffName, adapter.getCurProcID(), adapter.getCurProcThreadCnt(), buffCpuLoadByProcess, buffRamUsage));
                 } else//there already is a program in the list with current name
                 {
-                    if (buffCpuLoadByProcess == -1){
+                    if (buffCpuLoadByProcess < 0){
                         Controller.getInstance().showErrorMessage("Could not get CPU load of\nsome process(-es)");
                     }
                     if (buffRamUsage == buffSizeTMax){

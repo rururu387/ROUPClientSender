@@ -77,14 +77,10 @@ public class Controller {
 
     private DataProcessor dataProcessor = new DataProcessor(DEFAULTINTERVAL);
 
-    ReentrantLock socketLocker = new ReentrantLock();
-
-
     @FXML
     void onRegisterReleased(MouseEvent event) {
-        dataProcessor.register(nameField.getText(), passwordField.getText(), servAdr, servPort, socketLocker);
+        dataProcessor.register(nameField.getText(), passwordField.getText(), servAdr, servPort);
     }
-
 
     @FXML
     private void onCloseClicked(MouseEvent event) {
@@ -219,7 +215,7 @@ public class Controller {
     private void closeService(){
         if (dataProcThread != null) {
             try {
-                dataProcessor.BreakConnection(socketLocker);
+                dataProcessor.BreakConnection();
             } catch (IOException e) {
                 dataProcessor.interruptConnection();
             }
@@ -247,6 +243,8 @@ public class Controller {
         toggleButton.setEffect(greenShadow);
         nameField.setDisable(true);
         passwordField.setDisable(true);
+        registerButton.setImage(new Image(stylePath + "registerButtonSmallRed.png"));
+        registerButton.setDisable(true);
     }
 
     public void onTurnedOff(){
@@ -258,6 +256,8 @@ public class Controller {
         toggleButton.setEffect(orangeShadow);
         nameField.setDisable(false);
         passwordField.setDisable(false);
+        registerButton.setImage(new Image(stylePath + "registerButtonSmallGreen.png"));
+        registerButton.setDisable(true);
     }
 
     public void launchService(){
@@ -265,7 +265,7 @@ public class Controller {
             dataProcThread = new Thread() {
                 @Override
                 public void run() {
-                    dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort, socketLocker);
+                    dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort);
                 }
             };
             dataProcThread.start();

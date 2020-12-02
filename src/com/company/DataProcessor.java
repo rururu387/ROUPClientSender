@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Base64;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class DataProcessor extends Thread {
     private static BufferedReader readCl;
@@ -76,7 +75,7 @@ public class DataProcessor extends Thread {
         return new String(hexChars, StandardCharsets.UTF_8);
     }*/
 
-    public void run(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) {
+    public void run(String userName, String password, String servAdr, int servPort) {
 
         byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
         if (securedPassword == null) {
@@ -89,6 +88,7 @@ public class DataProcessor extends Thread {
                 Controller.getInstance().showErrorMessage("Could not establish connection\nServer may be down");
                 Controller.getInstance().onTurnedOff();
                 interruptConnection();
+                return;
             }
             GsonBuilder gsonBuilder = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
                 @Override
@@ -108,6 +108,7 @@ public class DataProcessor extends Thread {
             Gson gson = gsonBuilder.create();
             while (true) {
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
+                //TODO - prevent sending malformed datapacks
                 buffer.put(("Client data\n" + gson.toJson(getDataFromPC(userName, securedPassword, collectInterval))).getBytes());
                 buffer.flip();
 
@@ -122,6 +123,9 @@ public class DataProcessor extends Thread {
                         client.read(buffer);
                     } catch(IOException error) {
                         Controller.getInstance().showErrorMessage("Did not receive\nrespond from server");
+                        interruptConnection();
+                        Controller.getInstance().onTurnedOff();
+                        return;
                     }
                     String serverRespond = new String(buffer.array()).trim();
                     if (serverRespond.startsWith("Data is being processed")) {
@@ -140,7 +144,7 @@ public class DataProcessor extends Thread {
     }
 
 
-    public void register(String userName, String password, String servAdr, int servPort, ReentrantLock socketLocker) {
+    public void register(String userName, String password, String servAdr, int servPort) {
         byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
         if (securedPassword == null) {
             interruptConnection();
@@ -168,6 +172,7 @@ public class DataProcessor extends Thread {
             Controller.getInstance().showErrorMessage("Error writing data to server\nRegister failed");
             return;
         }
+        ByteBuffer respondBuffer = ByteBuffer.allocate(1024);
         try {
             client.read(respondBuffer);
         } catch (IOException e) {
@@ -185,7 +190,7 @@ public class DataProcessor extends Thread {
     }
 
 
-    public void BreakConnection(Reentrant socketLocker) throws IOException {
+    public void BreakConnection() throws IOException {
         String end_msg = "EndThisConnection";
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         buffer.put(end_msg.getBytes());

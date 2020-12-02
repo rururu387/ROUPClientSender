@@ -11,31 +11,24 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.paint.RadialGradient?>
-<?import javafx.scene.paint.Stop?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-            prefHeight="300.0" prefWidth="400.0" style="-fx-background-color: #1e1e1e;"
-            xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.GUI.Controller">
+<AnchorPane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="400.0" style="-fx-background-color: #1e1e1e;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.GUI.Controller">
    <children>
       <VBox prefHeight="300.0" prefWidth="400.0">
          <children>
-            <HBox fx:id="titleBar" alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="400.0"
-                  style="-fx-background-color: #585858; -fx-border-color: #696969;">
+            <HBox fx:id="titleBar" alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="400.0" style="-fx-background-color: #585858; -fx-border-color: #696969;">
                <cursor>
-                  <Cursor fx:constant="MOVE"/>
+                  <Cursor fx:constant="MOVE" />
                </cursor>
                <children>
-                  <ImageView fx:id="minimizeButton" fitHeight="30.0" fitWidth="30.0"
-                             onMouseClicked="#onMinimizeClicked">
+                  <ImageView fx:id="minimizeButton" fitHeight="30.0" fitWidth="30.0" onMouseClicked="#onMinimizeClicked">
                      <image>
-                        <Image url="@style/minimizeButton.png"/>
+                        <Image url="@style/minimizeButton.png" />
                      </image>
                      <cursor>
-                        <Cursor fx:constant="DEFAULT"/>
+                        <Cursor fx:constant="DEFAULT" />
                      </cursor>
                   </ImageView>
                   <ImageView fx:id="closeButton" fitHeight="30.0" fitWidth="30.0" onMouseClicked="#onCloseClicked">
@@ -64,13 +57,16 @@
                                  <VBox.margin>
                                     <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
                                  </VBox.margin>
+                                 <effect>
+                                    <DropShadow height="9.0" offsetY="1.0" radius="1.75" spread="0.75" width="0.0" />
+                                 </effect>
                               </Text>
                               <TextField fx:id="nameField" style="-fx-background-color: #585858; -fx-text-inner-color: #DEDEDE;">
                                  <VBox.margin>
                                     <Insets bottom="10.0" left="20.0" right="10.0" />
                                  </VBox.margin>
                                  <effect>
-                                    <DropShadow />
+                                    <DropShadow offsetY="1.0" />
                                  </effect>
                               </TextField>
                            </children>
@@ -84,13 +80,16 @@
                                  <VBox.margin>
                                     <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
                                  </VBox.margin>
+                                 <effect>
+                                    <DropShadow height="9.0" offsetY="1.0" radius="1.75" spread="0.75" width="0.0" />
+                                 </effect>
                               </Text>
                               <PasswordField fx:id="passwordField" style="-fx-background-color: #585858;">
                                  <VBox.margin>
                                     <Insets bottom="10.0" left="20.0" right="10.0" />
                                  </VBox.margin>
                                  <effect>
-                                    <DropShadow />
+                                    <DropShadow offsetY="1.0" />
                                  </effect>
                               </PasswordField>
                            </children>
@@ -99,22 +98,16 @@
                   </VBox>
                   <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="150.0">
                      <children>
-                        <Text fx:id="statusText" strokeType="OUTSIDE" strokeWidth="0.0" text="Turn on">
+                        <Text fx:id="statusText" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0" text="Turn on">
                            <font>
                               <Font size="24.0" />
                            </font>
                            <VBox.margin>
                               <Insets bottom="12.0" top="12.0" />
                            </VBox.margin>
-                           <fill>
-                              <RadialGradient centerX="0.5055555555555555" centerY="0.023809523809523794" focusDistance="0.023255813953488413" radius="0.5">
-                                 <stops>
-                                    <Stop color="#ffcfa0" />
-                                    <Stop color="#ffcfa0" offset="0.5134099616858238" />
-                                    <Stop color="#e09b5e" offset="1.0" />
-                                 </stops>
-                              </RadialGradient>
-                           </fill>
+                           <effect>
+                              <DropShadow height="9.38" offsetY="1.0" radius="1.8450000000000002" spread="0.75" width="0.0" />
+                           </effect>
                         </Text>
                         <ImageView fx:id="toggleButton" onMouseReleased="#onToggleSwitch">
                            <image>
@@ -126,49 +119,70 @@
                         </ImageView>
                      </children>
                      <opaqueInsets>
-                        <Insets/>
+                        <Insets />
                      </opaqueInsets>
                      <HBox.margin>
-                        <Insets/>
+                        <Insets />
                      </HBox.margin>
                   </VBox>
                </children>
             </HBox>
-            <VBox prefHeight="200.0" prefWidth="100.0">
+            <VBox disable="true" prefHeight="200.0" prefWidth="100.0" scaleShape="false">
                <children>
-                  <Separator prefWidth="200.0"
-                             style="-fx-border-color: #585858; -fx-border-width: 2; -fx-background-color: #585858;">
+                  <Separator opacity="0.345" prefWidth="400.0">
                      <VBox.margin>
-                        <Insets top="15.0"/>
+                        <Insets bottom="-0.7" left="1.0" right="1.0" top="15.0" />
                      </VBox.margin>
+                     <effect>
+                        <DropShadow height="5.0" offsetY="1.0" radius="1.75" spread="1.0" width="4.0" />
+                     </effect>
                   </Separator>
                   <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0">
                      <children>
                         <HBox prefHeight="88.0" prefWidth="300.0">
                            <children>
-                              <Text fx:id="errorMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0"
-                                    wrappingWidth="261.0">
+                              <VBox prefHeight="200.0" prefWidth="285.0">
+                                 <children>
+                                    <Text fill="#f8f8f8" stroke="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Notifications">
+                                       <VBox.margin>
+                                          <Insets bottom="5.0" left="20.0" right="10.0" top="2.0" />
+                                       </VBox.margin>
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                       <effect>
+                                          <DropShadow height="9.0" offsetY="1.0" radius="1.75" spread="0.75" width="0.0" />
+                                       </effect>
+                                    </Text>
+                                    <Text fx:id="errorMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="244.0">
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font>
+                                       <VBox.margin>
+                                          <Insets bottom="10.0" left="20.0" right="20.0" />
+                                       </VBox.margin>
+                                    </Text>
+                                 </children>
                                  <HBox.margin>
-                                    <Insets left="15.0" top="30.0"/>
+                                    <Insets />
                                  </HBox.margin>
-                                 <font>
-                                    <Font size="16.0"/>
-                                 </font>
-                              </Text>
+                              </VBox>
                            </children>
                         </HBox>
-                        <Separator orientation="VERTICAL" prefHeight="200.0">
-                           <padding>
-                              <Insets right="20.0"/>
-                           </padding>
+                        <Separator opacity="0.345" orientation="VERTICAL" prefHeight="100.0" prefWidth="0.0">
+                           <HBox.margin>
+                              <Insets bottom="1.0" right="20.0" />
+                           </HBox.margin>
+                           <effect>
+                              <DropShadow height="2.5" offsetY="1.0" radius="1.375" spread="1.0" width="5.0" />
+                           </effect>
                         </Separator>
-                        <ImageView fx:id="registerButton" fitHeight="70.0" fitWidth="70.0"
-                                   onMouseReleased="#onRegisterReleased">
+                        <ImageView fx:id="registerButton" fitHeight="70.0" fitWidth="70.0" onMouseReleased="#onRegisterReleased">
                            <image>
-                              <Image url="@style/registerButton.png"/>
+                              <Image url="@style/registerButtonSmallGreen.png" />
                            </image>
                            <HBox.margin>
-                              <Insets right="20.0"/>
+                              <Insets right="20.0" />
                            </HBox.margin>
                         </ImageView>
                      </children>
