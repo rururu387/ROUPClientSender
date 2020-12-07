@@ -257,17 +257,12 @@ public class Controller {
         nameField.setDisable(false);
         passwordField.setDisable(false);
         registerButton.setImage(new Image(stylePath + "registerButtonSmallGreen.png"));
-        registerButton.setDisable(true);
+        registerButton.setDisable(false);
     }
 
     public void launchService(){
         if (dataProcThread == null || !dataProcThread.isAlive()) {
-            dataProcThread = new Thread() {
-                @Override
-                public void run() {
-                    dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort);
-                }
-            };
+            dataProcThread = new Thread(() -> dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort));
             dataProcThread.start();
         }
     }

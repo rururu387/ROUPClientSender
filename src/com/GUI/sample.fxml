@@ -127,7 +127,7 @@
                   </VBox>
                </children>
             </HBox>
-            <VBox disable="true" prefHeight="200.0" prefWidth="100.0" scaleShape="false">
+            <VBox prefHeight="200.0" prefWidth="100.0" scaleShape="false">
                <children>
                   <Separator opacity="0.345" prefWidth="400.0">
                      <VBox.margin>

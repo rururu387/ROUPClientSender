@@ -19,7 +19,8 @@ public class ProgramClass {//class which contains info about program
         return name;
     }
 
-    public void merge(long ID, int threadAmount, double cpuUsage, long ramUsage) //Method to merge Program with equal names
+    //Method to merge Program with equal names
+    public void merge(long ID, int threadAmount, double cpuUsage, long ramUsage)
     {
         if (this.ID > ID)
             this.ID = ID;
@@ -36,7 +37,5 @@ public class ProgramClass {//class which contains info about program
         System.out.println("RAM usage: " + ramUsage);
         System.out.println("-----------------------");
     }
-
-
 }
 
