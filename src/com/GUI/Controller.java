@@ -1,6 +1,11 @@
 package com.GUI;
 
 import com.company.DataProcessor;
+import com.company.Properties;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -17,16 +22,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
-import java.util.concurrent.locks.ReentrantLock;
+import java.io.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
-import java.io.File;
-import java.io.IOException;
 
 //Class-singleton
-public class Controller {
+public class Controller
+{
     @FXML
     private AnchorPane pane;
 
@@ -69,28 +73,26 @@ public class Controller {
 
     private static final String stylePath = "com/GUI/style/";
 
-    public static final String servAdr = "127.0.0.1";
-
-    public static final int servPort = 5020;
-
-    public static final int DEFAULTINTERVAL = 10000;
-
-    private DataProcessor dataProcessor = new DataProcessor(DEFAULTINTERVAL);
+    private DataProcessor dataProcessor = null;
 
     @FXML
-    void onRegisterReleased(MouseEvent event) {
-        dataProcessor.register(nameField.getText(), passwordField.getText(), servAdr, servPort);
+    void onRegisterReleased(MouseEvent event)
+    {
+        dataProcessor.register(nameField.getText(), passwordField.getText(), Properties.getInstance().getServAdr(), Properties.getInstance().getPort());
     }
 
     @FXML
-    private void onCloseClicked(MouseEvent event) {
+    private void onCloseClicked(MouseEvent event)
+    {
         window = (Stage) (closeButton).getScene().getWindow();
-        if (dataProcessor.getIsServiceToggledOff()) {
+        if (dataProcessor.getIsServiceToggledOff())
+        {
             closeApp();
         } else
         {
             window.hide();
-            if (!isTrayIconExist) {
+            if (!isTrayIconExist)
+            {
                 javax.swing.SwingUtilities.invokeLater(this::addAppToTray);
                 isTrayIconExist = true;
             }
@@ -98,44 +100,53 @@ public class Controller {
     }
 
     @FXML
-    private void onMinimizeClicked(MouseEvent event) {
+    private void onMinimizeClicked(MouseEvent event)
+    {
         ((Stage) (minimizeButton).getScene().getWindow()).setIconified(true);
     }
 
     @FXML
-    private void onToggleSwitch(MouseEvent event) {
+    private void onToggleSwitch(MouseEvent event)
+    {
         toggleSwitch();
     }
 
-    public String getUserName() {
+    public String getUserName()
+    {
         if (nameField == null)
             return null;
         return nameField.getText();
     }
 
-    public static Controller getInstance(){
+    public static Controller getInstance()
+    {
         return thisController;
     }
 
-    public void showErrorMessage(String error) {
+    public void showErrorMessage(String error)
+    {
         errorMessage.setText(error);
         errorMessage.setVisible(true);
     }
 
-    public void showErrorMessage(String error, Paint paint) {
+    public void showErrorMessage(String error, Paint paint)
+    {
         errorMessage.setText(error);
         errorMessage.setFill(paint);
         errorMessage.setVisible(true);
     }
 
     //Modified source https://gist.github.com/jonyfs/b279b5e052c3b6893a092fed79aa7fbe#file-javafxtrayiconsample-java-L86
-    private void addAppToTray() {
-        try {
+    private void addAppToTray()
+    {
+        try
+        {
             // ensure awt toolkit is initialized.
             java.awt.Toolkit.getDefaultToolkit();
 
             // app requires system tray support, just exit if there is no support.
-            if (!java.awt.SystemTray.isSupported()) {
+            if (!java.awt.SystemTray.isSupported())
+            {
                 System.out.println("No system tray support, application exiting.");
                 closeApp();
             }
@@ -156,17 +167,21 @@ public class Controller {
 
             // toggle logging via tray, add item to popup menu, change it's displayed label
             java.awt.MenuItem toggleItem = new java.awt.MenuItem("Turn off");
-            toggleItem.addActionListener(event -> { toggleSwitch(); });
+            toggleItem.addActionListener(event ->
+            {
+                toggleSwitch();
+            });
 
             //Tray icon listener. Used to show tray label correctly - toggle off when switched on and vise versa
-            trayIcon.addMouseMotionListener(new MouseAdapter() {
+            trayIcon.addMouseMotionListener(new MouseAdapter()
+            {
                 @Override
-                public void mouseMoved(java.awt.event.MouseEvent e) {
+                public void mouseMoved(java.awt.event.MouseEvent e)
+                {
                     if (dataProcessor.getIsServiceToggledOff())
                     {
                         toggleItem.setLabel("Turn on");
-                    }
-                    else
+                    } else
                     {
                         toggleItem.setLabel("Turn off");
                     }
@@ -183,7 +198,8 @@ public class Controller {
             // and select the exit option, this will shutdown JavaFX and remove the
             // tray icon (removing the tray icon will also shut down AWT).
             java.awt.MenuItem exitItem = new java.awt.MenuItem("Exit");
-            exitItem.addActionListener(event -> {
+            exitItem.addActionListener(event ->
+            {
                 tray.remove(trayIcon);
                 closeApp();
             });
@@ -198,43 +214,71 @@ public class Controller {
 
             // add the application tray icon to the system tray.
             tray.add(trayIcon);
-        } catch (AWTException | IOException e) {
+        } catch (AWTException | IOException e)
+        {
             //Show window
             ((Stage) (closeButton).getScene().getWindow()).show();
             showErrorMessage("Couldn't minimize application to tray");
         }
     }
 
-    private void showStage() {
-        if (window != null) {
+    private void showStage()
+    {
+        if (window != null)
+        {
             window.show();
             window.toFront();
         }
     }
 
-    private void closeService(){
-        if (dataProcThread != null) {
-            try {
+    private void closeService()
+    {
+        if (dataProcThread != null)
+        {
+            try
+            {
                 dataProcessor.BreakConnection();
-            } catch (IOException e) {
+            } catch (IOException e)
+            {
                 dataProcessor.interruptConnection();
             }
-            if (!dataProcThread.isInterrupted()) {
-                Thread.UncaughtExceptionHandler h = (th, ex) -> {};
+            try
+            {
+                dataProcThread.join(Properties.getInstance().getServiceDisablingTime());
+            }
+            catch (InterruptedException e)
+            {
+                Thread.UncaughtExceptionHandler h = (th, ex) ->
+                {
+                };
                 dataProcThread.setUncaughtExceptionHandler(h);
                 dataProcThread.interrupt();
+                Controller.getInstance().showErrorMessage("Emergency service interrupt");
+            }
+
+            if (dataProcThread.isAlive() && !dataProcThread.isInterrupted())
+            {
+                Thread.UncaughtExceptionHandler h = (th, ex) ->
+                {
+                };
+                dataProcThread.setUncaughtExceptionHandler(h);
+                dataProcThread.interrupt();
+                Controller.getInstance().showErrorMessage("Emergency service interrupt");
             }
         }
         dataProcThread = null;
     }
 
-    public void closeApp() {
+    public void closeApp()
+    {
         closeService();
+        Properties.serializeProperties();
         Platform.exit();
         System.exit(0);
     }
 
-    public void onTurnedOn(){
+    public void onTurnedOn()
+    {
         dataProcessor.setIsServiceToggledOff(false);
         statusText.setFill(Paint.valueOf("#9de05c"));
         statusText.setText("Turn off");
@@ -247,7 +291,8 @@ public class Controller {
         registerButton.setDisable(true);
     }
 
-    public void onTurnedOff(){
+    public void onTurnedOff()
+    {
         dataProcessor.setIsServiceToggledOff(true);
         statusText.setFill(Paint.valueOf("#f8902f"));
         statusText.setText("Turn on");
@@ -260,27 +305,32 @@ public class Controller {
         registerButton.setDisable(false);
     }
 
-    public void launchService(){
-        if (dataProcThread == null || !dataProcThread.isAlive()) {
-            dataProcThread = new Thread(() -> dataProcessor.run(nameField.getText(), passwordField.getText(), servAdr, servPort));
+    public void launchService()
+    {
+        if (dataProcThread == null || !dataProcThread.isAlive())
+        {
+            dataProcThread = new Thread(() -> dataProcessor.run(nameField.getText(), passwordField.getText(), Properties.getInstance().getServAdr(), Properties.getInstance().getPort()));
             dataProcThread.start();
         }
     }
 
     private void toggleSwitch()
     {
-        if (dataProcessor.getIsServiceToggledOff()) {
+        if (dataProcessor.getIsServiceToggledOff())
+        {
             onTurnedOn();
             launchService();
-        }
-        else {
+        } else
+        {
             onTurnedOff();
             closeService();
         }
     }
 
-    public boolean isContain (MouseEvent mouseEvent, ImageView image) {
-        if (mouseEvent.getX() >= image.getBoundsInParent().getCenterX() - (image.getFitWidth() / 2) && mouseEvent.getX() <= image.getBoundsInParent().getCenterX() + (image.getFitWidth() / 2) && mouseEvent.getY() >= image.getBoundsInParent().getCenterY() - (image.getFitHeight() / 2) && mouseEvent.getY() <= image.getBoundsInParent().getCenterY() + (image.getFitHeight() / 2)) {
+    public boolean isContain(MouseEvent mouseEvent, ImageView image)
+    {
+        if (mouseEvent.getX() >= image.getBoundsInParent().getCenterX() - (image.getFitWidth() / 2) && mouseEvent.getX() <= image.getBoundsInParent().getCenterX() + (image.getFitWidth() / 2) && mouseEvent.getY() >= image.getBoundsInParent().getCenterY() - (image.getFitHeight() / 2) && mouseEvent.getY() <= image.getBoundsInParent().getCenterY() + (image.getFitHeight() / 2))
+        {
             return true;
         }
         return false;
@@ -289,35 +339,48 @@ public class Controller {
     public void initialize()
     {
         thisController = this;
-        titleBar.setOnMousePressed(new EventHandler<MouseEvent>() {
+        titleBar.setOnMousePressed(new EventHandler<MouseEvent>()
+        {
             @Override
-            public void handle(MouseEvent t) {
-                if (isContain(t, minimizeButton) || isContain(t, closeButton)) {
+            public void handle(MouseEvent t)
+            {
+                if (isContain(t, minimizeButton) || isContain(t, closeButton))
+                {
                     mouse.setX(-1);
                     mouse.setY(-1);
-                }
-                else {
+                } else
+                {
                     mouse.setX(t.getX());
                     mouse.setY(t.getY());
                 }
             }
         });
 
-        titleBar.setOnMouseDragged(new EventHandler<MouseEvent>() {
+        titleBar.setOnMouseDragged(new EventHandler<MouseEvent>()
+        {
             @Override
-            public void handle(MouseEvent t) {
-                if (mouse.getX() != -1) {
+            public void handle(MouseEvent t)
+            {
+                if (mouse.getX() != -1)
+                {
                     titleBar.getScene().getWindow().setX(t.getScreenX() - mouse.getX());
                     titleBar.getScene().getWindow().setY(t.getScreenY() - mouse.getY());
                 }
             }
         });
 
-        pane.setOnMousePressed(new EventHandler<MouseEvent>() {
+        pane.setOnMousePressed(new EventHandler<MouseEvent>()
+        {
             @Override
-            public void handle(MouseEvent t) {
+            public void handle(MouseEvent t)
+            {
                 errorMessage.setVisible(false);
             }
         });
+
+        Properties.deserializeProperties();
+        Properties.getInstance().setInvalidFieldsToDefault();
+        dataProcessor = new DataProcessor(Properties.getInstance().getCollectInterval());
+        nameField.setText(Properties.getInstance().getName());
     }
 }

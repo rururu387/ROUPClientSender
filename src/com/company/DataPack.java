@@ -1,7 +1,6 @@
 package com.company;
 
 import com.GUI.Controller;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -33,6 +32,7 @@ public class DataPack {//Class which contains gets and contains info about progr
 
     public void getInfo(int collectInterval) //Сбор информации
     {
+        //TODO - fix bug with application falling down when task manager is an active window
         this.collectInterval = collectInterval;
         JNIAdapter adapter = new JNIAdapter();//handling c++ code object
         adapter.updateSnap();//update program list on os
@@ -103,7 +103,7 @@ public class DataPack {//Class which contains gets and contains info about progr
     }
 
     private String getNormalString(String str) {//return string without \u0000
-        String res = new String();
+        String res = "";
         for (char sym : str.toCharArray()) {
             if (sym != '\u0000') {
                 res += sym;
