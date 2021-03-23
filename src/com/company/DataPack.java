@@ -5,11 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class DataPack {//Class which contains gets and contains info about program
-
-    static {
-        System.loadLibrary("ClientMainClass");//including dll
-    }
-
     private String userName;
     byte[] securedPassword;
     private LocalDateTime creationDate;
@@ -34,9 +29,14 @@ public class DataPack {//Class which contains gets and contains info about progr
     {
         //TODO - fix bug with application falling down when task manager is an active window
         this.collectInterval = collectInterval;
-        JNIAdapter adapter = new JNIAdapter();//handling c++ code object
+        JNIAdapter adapter = JNIAdapter.getInstance();
         adapter.updateSnap();//update program list on os
-
+        String str = adapter.getProgramNameByActiveWindow();
+        if (str.startsWith("Goose"))
+        {
+            System.out.println(str);
+            return;
+        }
         activeWindowProcessName = getNormalString(adapter.getProgramNameByActiveWindow());
         if (activeWindowProcessName == "Unknown program"){
             Controller.getInstance().showErrorMessage("Couldn't get foreground program name.\n It's OS-protected");
@@ -80,7 +80,7 @@ public class DataPack {//Class which contains gets and contains info about progr
 
             }
         } while (adapter.toNextProcess());
-        adapter.destructor();
+        //adapter.destructor();
         creationDate = LocalDateTime.now();
     }
 

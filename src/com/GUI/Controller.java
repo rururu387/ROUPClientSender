@@ -1,6 +1,7 @@
 package com.GUI;
 
 import com.company.DataProcessor;
+import com.company.JNIAdapter;
 import com.company.Properties;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -21,9 +22,7 @@ import javafx.scene.text.Text;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-
 import java.io.*;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -31,6 +30,10 @@ import java.awt.event.MouseAdapter;
 //Class-singleton
 public class Controller
 {
+    static {
+        System.loadLibrary("ClientMainClass");//including dll
+    }
+
     @FXML
     private AnchorPane pane;
 
@@ -231,8 +234,13 @@ public class Controller
         }
     }
 
-    private void closeService()
+    public void closeService()
     {
+        if (JNIAdapter.getInstance().isPointerInitialized())
+        {
+            JNIAdapter.getInstance().destructor();
+        }
+
         if (dataProcThread != null)
         {
             try
@@ -307,6 +315,8 @@ public class Controller
 
     public void launchService()
     {
+        JNIAdapter adapter = new JNIAdapter();//handling c++ code object
+        adapter.initialize();
         if (dataProcThread == null || !dataProcThread.isAlive())
         {
             dataProcThread = new Thread(() -> dataProcessor.run(nameField.getText(), passwordField.getText(), Properties.getInstance().getServAdr(), Properties.getInstance().getPort()));

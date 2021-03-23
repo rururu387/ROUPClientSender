@@ -152,6 +152,7 @@ public class DataProcessor extends Thread
                 {
                     return;
                 }
+
                 try
                 {
                     client.write(buffer);
@@ -160,9 +161,16 @@ public class DataProcessor extends Thread
                     Controller.getInstance().showErrorMessage("Sending info to server failed\n retry in " + collectInterval / 1000 + "s");
                 }
                 buffer.clear();
+
+                if (isServiceToggledOff)
+                {
+                    return;
+                }
+
+                ByteBuffer readBuffer = ByteBuffer.allocate(100);
                 try
                 {
-                    client.read(buffer);
+                    client.read(readBuffer);
                 } catch (IOException error)
                 {
                     Controller.getInstance().showErrorMessage("Did not receive\nrespond from server");
@@ -170,7 +178,7 @@ public class DataProcessor extends Thread
                     Controller.getInstance().onTurnedOff();
                     return;
                 }
-                String serverRespond = new String(buffer.array()).trim();
+                String serverRespond = new String(readBuffer.array()).trim();
                 if (serverRespond.startsWith("Data is being processed"))
                 {
                     Controller.getInstance().showErrorMessage("Login and password\nare correct", Paint.valueOf("#9de05c"));

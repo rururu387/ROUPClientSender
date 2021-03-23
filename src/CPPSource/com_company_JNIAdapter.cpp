@@ -1,7 +1,7 @@
 #include "com_company_JNIAdapter.h"
-
 #include "com_company_JNIAdapterImpl.h"
-//For more comments please view .h file
+
+//For more comments please view Impl.h file
 
 /*
  * Casts java variable of type jlong containing pointer to JNIWindowSnap 

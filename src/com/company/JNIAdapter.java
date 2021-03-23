@@ -1,14 +1,39 @@
 package com.company;
 
 public class JNIAdapter {
-    private long nClassPointer = 0;
+    private static JNIAdapter thisAdapter = null;
+    private static long nClassPointer = 0;
 
-    public JNIAdapter() {
+    public JNIAdapter()
+    {
+        if (thisAdapter == null)
+        {
+            thisAdapter = this;
+        }
+    }
+
+    public void initialize()
+    {
         nClassPointer = callConstructor();
+    }
+
+    public static JNIAdapter getInstance()
+    {
+        return thisAdapter;
     }
 
     public void destructor() {
         callDestructor(nClassPointer);
+        nClassPointer = 0;
+    }
+
+    public boolean isPointerInitialized()
+    {
+        if (nClassPointer == 0)
+        {
+            return false;
+        }
+        return true;
     }
 
     public long getCurProcID() { return getCurProcID(nClassPointer); }
@@ -39,7 +64,7 @@ public class JNIAdapter {
 
     public boolean updateSnap() { return updateSnap(nClassPointer); }
 
-    private native long callConstructor();
+    private static native long callConstructor();
 
     private native void callDestructor(long nClassPointer);
 
