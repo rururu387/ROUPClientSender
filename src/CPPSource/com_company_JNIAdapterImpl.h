@@ -71,7 +71,7 @@ private:
     HANDLE hProcess;
     PROCESSENTRY32 pe32;
 public:
-    JNIWindowsSnapAdapter() { hProcessesSnap = NULL; hProcess = NULL;  pe32 = {}; };
+    JNIWindowsSnapAdapter() ;
     //Throws SnapError on failure
     ~JNIWindowsSnapAdapter();
 
@@ -99,6 +99,13 @@ public:
     //Function updates snap and calls toNextProcess so hProcess is valid
     //Returns false on failure
     bool updateSnap();
+};
+
+JNIWindowsSnapAdapter::JNIWindowsSnapAdapter()
+{ 
+	hProcessesSnap = NULL;
+	hProcess = NULL;
+	pe32 = {}; 
 };
 
 JNIWindowsSnapAdapter::~JNIWindowsSnapAdapter()

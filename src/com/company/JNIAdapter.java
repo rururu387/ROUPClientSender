@@ -1,6 +1,7 @@
 package com.company;
 
-public class JNIAdapter {
+public class JNIAdapter
+{
     private static JNIAdapter thisAdapter = null;
     private static long nClassPointer = 0;
 
@@ -22,7 +23,18 @@ public class JNIAdapter {
         return thisAdapter;
     }
 
-    public void destructor() {
+    public void destructor()
+    {
+        //Delay added to ensure that object is created before being destructed
+        /*try
+        {
+            Thread.sleep((long) (Properties.getInstance().getServiceDisablingTime() * 1.7));
+        } catch(InterruptedException e)
+        {
+            long tmp = nClassPointer;
+            nClassPointer = 0;
+            callDestructor(tmp);
+        }*/
         callDestructor(nClassPointer);
         nClassPointer = 0;
     }
@@ -36,33 +48,47 @@ public class JNIAdapter {
         return true;
     }
 
-    public long getCurProcID() { return getCurProcID(nClassPointer); }
+    public long getCurProcID()
+    {
+        return getCurProcID(nClassPointer);
+    }
 
-    public String getCurProcName() { return getCurProcName(nClassPointer); }
+    public String getCurProcName()
+    {
+        return getCurProcName(nClassPointer);
+    }
 
-    public int getCurProcThreadCnt() {
+    public int getCurProcThreadCnt()
+    {
         return getCurProcThreadCnt(nClassPointer);
     }
 
-    public String getProgramNameByActiveWindow() {
+    public String getProgramNameByActiveWindow()
+    {
         return getProgramNameByActiveWindow(nClassPointer);
     }
 
-    public double getCpuLoadByProcess() {
+    public double getCpuLoadByProcess()
+    {
         return getCpuLoadByProcess(nClassPointer);
     }
 
     public native long getSizeTMax();
 
-    public long getRAMLoadByProcess() {
+    public long getRAMLoadByProcess()
+    {
         return getRAMLoadByProcess(nClassPointer);
     }
 
-    public boolean toNextProcess() {
+    public boolean toNextProcess()
+    {
         return toNextProcess(nClassPointer);
     }
 
-    public boolean updateSnap() { return updateSnap(nClassPointer); }
+    public boolean updateSnap()
+    {
+        return updateSnap(nClassPointer);
+    }
 
     private static native long callConstructor();
 

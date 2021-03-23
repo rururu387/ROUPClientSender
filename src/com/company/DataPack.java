@@ -27,9 +27,9 @@ public class DataPack {//Class which contains gets and contains info about progr
 
     public void getInfo(int collectInterval) //Сбор информации
     {
-        //TODO - fix bug with application falling down when task manager is an active window
         this.collectInterval = collectInterval;
-        JNIAdapter adapter = JNIAdapter.getInstance();
+        JNIAdapter adapter = new JNIAdapter();
+        adapter.initialize();
         adapter.updateSnap();//update program list on os
         String str = adapter.getProgramNameByActiveWindow();
         if (str.startsWith("Goose"))
@@ -46,14 +46,15 @@ public class DataPack {//Class which contains gets and contains info about progr
             activeWindowProcessName = "Unknown program";
         }
 
-        do {
+        do
+        {
             adapter.getCpuLoadByProcess();
         } while (adapter.toNextProcess());
-        try {
+        try
+        {
             Thread.sleep(CPUMeasureTime);
-        } catch (java.lang.Exception e) {
-            System.out.println(e);
-        }
+        } catch (java.lang.InterruptedException e) {}
+
         adapter.updateSnap();
         long buffSizeTMax = adapter.getSizeTMax();
         do {
@@ -80,7 +81,7 @@ public class DataPack {//Class which contains gets and contains info about progr
 
             }
         } while (adapter.toNextProcess());
-        //adapter.destructor();
+        adapter.destructor();
         creationDate = LocalDateTime.now();
     }
 

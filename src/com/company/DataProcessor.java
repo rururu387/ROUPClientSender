@@ -103,7 +103,7 @@ public class DataProcessor extends Thread
                 interruptConnection();
                 return;
             }
-            GsonBuilder gsonBuilder = new GsonBuilder().registerTypeAdapter
+            GsonBuilder gsonBuilder =  new GsonBuilder().registerTypeAdapter
                     (LocalDateTime.class, new JsonSerializer<LocalDateTime>()
                     {
                         @Override

@@ -236,11 +236,6 @@ public class Controller
 
     public void closeService()
     {
-        if (JNIAdapter.getInstance().isPointerInitialized())
-        {
-            JNIAdapter.getInstance().destructor();
-        }
-
         if (dataProcThread != null)
         {
             try
@@ -315,8 +310,6 @@ public class Controller
 
     public void launchService()
     {
-        JNIAdapter adapter = new JNIAdapter();//handling c++ code object
-        adapter.initialize();
         if (dataProcThread == null || !dataProcThread.isAlive())
         {
             dataProcThread = new Thread(() -> dataProcessor.run(nameField.getText(), passwordField.getText(), Properties.getInstance().getServAdr(), Properties.getInstance().getPort()));
