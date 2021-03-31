@@ -18,6 +18,13 @@ public class DataPack {//Class which contains gets and contains info about progr
         this.userName = userName;
     }
 
+    public DataPack()
+    {
+        this.userName = null;
+        this.securedPassword = null;
+        programs = new ArrayList<>();
+    }
+
     public DataPack(String userName, byte[] securedPassword)//this is Constructor👍🏻
     {
         this.userName = userName;

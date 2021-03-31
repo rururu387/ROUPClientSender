@@ -13,13 +13,14 @@ public class Properties {
     private String name = "GooseDefault";
     private String servAdr = "127.0.0.1";
     private int port = 5020;
-    private  final int DEFAULTPORT = 5020;
     private int collectInterval = 10000;
+    private int retryNumOnError = 3;
+    private int maxNotRespondedDataPacks = 5;
 
     //This is an amount of time that is required to stop service.
     //Program may freeze for time milliseconds when disabled
     //but getting and sending data must proceed within this time in order to evade memory leaks
-    private int serviceDisablingTime = 500;
+    //private int serviceDisablingTime = 500;
 
     public String getName() {
         return name;
@@ -41,9 +42,14 @@ public class Properties {
         return collectInterval;
     }
 
-    public int getServiceDisablingTime()
+    public int getRetryNumOnError()
     {
-        return serviceDisablingTime;
+        return retryNumOnError;
+    }
+
+    public int getMaxNotRespondedDataPacks()
+    {
+        return maxNotRespondedDataPacks;
     }
 
     public static Properties getInstance()
@@ -103,6 +109,7 @@ public class Properties {
         } catch (FileNotFoundException e)
         {
             Controller.getInstance().showErrorMessage("Properties file not found. Using default parameters");
+            new Properties();
             return;
         }
         Gson gson = new Gson();
@@ -114,6 +121,7 @@ public class Properties {
         catch (JsonSyntaxException | JsonIOException | IOException e)
         {
             Controller.getInstance().showErrorMessage("Could not read config file. Using default parameters");
+            new Properties();
             return;
         }
     }
@@ -122,7 +130,7 @@ public class Properties {
     {
         if (port <= 1024 || port > 65535)
         {
-            port = DEFAULTPORT;
+            port = 5020;
             Controller.getInstance().showErrorMessage("Value invalid. 1024 < port <= 65535. Using default value");
         }
 
@@ -135,12 +143,6 @@ public class Properties {
         if (collectInterval < 2000)
         {
             Controller.getInstance().showErrorMessage("Warning! Program may work incorrect if PC is overloaded");
-        }
-
-        if (serviceDisablingTime <= 500 || serviceDisablingTime >= 3000)
-        {
-            serviceDisablingTime = 700;
-            Controller.getInstance().showErrorMessage("Value invalid. 500ms < service disabling < 3s. Using default value");
         }
     }
 }

@@ -35,6 +35,7 @@ public class Main extends Application {
         });
 
         window.show();
+        Controller.getInstance().setWindow(window);
     }
 
     public static void main(String[] args) {

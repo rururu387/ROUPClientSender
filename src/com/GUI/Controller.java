@@ -1,12 +1,7 @@
 package com.GUI;
 
 import com.company.DataProcessor;
-import com.company.JNIAdapter;
 import com.company.Properties;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonSyntaxException;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -30,10 +25,6 @@ import java.awt.event.MouseAdapter;
 //Class-singleton
 public class Controller
 {
-    static {
-        System.loadLibrary("ClientMainClass");//including dll
-    }
-
     @FXML
     private AnchorPane pane;
 
@@ -70,24 +61,29 @@ public class Controller
 
     private boolean isTrayIconExist = false;
 
-    private Thread dataProcThread;
-
     private static Controller thisController = null;
 
     private static final String stylePath = "com/GUI/style/";
 
-    private DataProcessor dataProcessor = null;
+    private DataProcessor dataProcessor = new DataProcessor();
 
     @FXML
     void onRegisterReleased(MouseEvent event)
     {
-        dataProcessor.register(nameField.getText(), passwordField.getText(), Properties.getInstance().getServAdr(), Properties.getInstance().getPort());
+        if (dataProcessor.isConnected())
+        {
+            dataProcessor.register(Properties.getInstance().getServAdr(), Properties.getInstance().getPort(), nameField.getText(), passwordField.getText());
+        }
+        else
+        {
+            Controller.getInstance().onTurnedOff();
+        }
     }
 
     @FXML
     private void onCloseClicked(MouseEvent event)
     {
-        window = (Stage) (closeButton).getScene().getWindow();
+        //window = (Stage) (closeButton).getScene().getWindow();
         if (dataProcessor.getIsServiceToggledOff())
         {
             closeApp();
@@ -105,7 +101,7 @@ public class Controller
     @FXML
     private void onMinimizeClicked(MouseEvent event)
     {
-        ((Stage) (minimizeButton).getScene().getWindow()).setIconified(true);
+        window.setIconified(true);
     }
 
     @FXML
@@ -124,6 +120,16 @@ public class Controller
     public static Controller getInstance()
     {
         return thisController;
+    }
+
+    public void setDataProcessor(DataProcessor dataProcessor)
+    {
+        this.dataProcessor = dataProcessor;
+    }
+
+    public void setWindow(Stage window)
+    {
+        this.window = window;
     }
 
     public void showErrorMessage(String error)
@@ -197,7 +203,7 @@ public class Controller
             java.awt.Font boldFont = defaultFont.deriveFont(java.awt.Font.BOLD);
             openItem.setFont(boldFont);
 
-            // to really exit the application, the user must go to the system tray icon
+            // to finally exit the application, user must go to the system tray icon
             // and select the exit option, this will shutdown JavaFX and remove the
             // tray icon (removing the tray icon will also shut down AWT).
             java.awt.MenuItem exitItem = new java.awt.MenuItem("Exit");
@@ -225,51 +231,32 @@ public class Controller
         }
     }
 
-    private void showStage()
+    public void showStage()
     {
         if (window != null)
         {
             window.show();
+            window.setIconified(false);
             window.toFront();
         }
     }
 
     public void closeService()
     {
-        if (dataProcThread != null)
+        if (dataProcessor != null)
         {
-            try
-            {
-                dataProcessor.BreakConnection();
-            } catch (IOException e)
-            {
-                dataProcessor.interruptConnection();
-            }
-            try
-            {
-                dataProcThread.join(Properties.getInstance().getServiceDisablingTime());
-            }
-            catch (InterruptedException e)
-            {
-                Thread.UncaughtExceptionHandler h = (th, ex) ->
-                {
-                };
-                dataProcThread.setUncaughtExceptionHandler(h);
-                dataProcThread.interrupt();
-                Controller.getInstance().showErrorMessage("Emergency service interrupt");
-            }
+            dataProcessor.finishConnection();
 
-            if (dataProcThread.isAlive() && !dataProcThread.isInterrupted())
+            if (dataProcessor.isAlive() && !dataProcessor.isInterrupted())
             {
                 Thread.UncaughtExceptionHandler h = (th, ex) ->
                 {
                 };
-                dataProcThread.setUncaughtExceptionHandler(h);
-                dataProcThread.interrupt();
-                Controller.getInstance().showErrorMessage("Emergency service interrupt");
+                dataProcessor.setUncaughtExceptionHandler(h);
+                dataProcessor.interrupt();
+                Controller.getInstance().showErrorMessage("Emergency service interrupt.");
             }
         }
-        dataProcThread = null;
     }
 
     public void closeApp()
@@ -282,7 +269,6 @@ public class Controller
 
     public void onTurnedOn()
     {
-        dataProcessor.setIsServiceToggledOff(false);
         statusText.setFill(Paint.valueOf("#9de05c"));
         statusText.setText("Turn off");
         toggleButton.setImage(new Image(stylePath + "turnOnButtonSmall.png"));
@@ -296,7 +282,6 @@ public class Controller
 
     public void onTurnedOff()
     {
-        dataProcessor.setIsServiceToggledOff(true);
         statusText.setFill(Paint.valueOf("#f8902f"));
         statusText.setText("Turn on");
         toggleButton.setImage(new Image(stylePath + "turnOffButtonSmall.png"));
@@ -310,16 +295,20 @@ public class Controller
 
     public void launchService()
     {
-        if (dataProcThread == null || !dataProcThread.isAlive())
+        if (dataProcessor.getIsServiceToggledOff())
         {
-            dataProcThread = new Thread(() -> dataProcessor.run(nameField.getText(), passwordField.getText(), Properties.getInstance().getServAdr(), Properties.getInstance().getPort()));
-            dataProcThread.start();
+            dataProcessor.collectAndSendData(Properties.getInstance().getServAdr(), Properties.getInstance().getPort(), Controller.getInstance().getUserName(), Controller.getInstance().passwordField.getText(), Properties.getInstance().getCollectInterval());
         }
+        /*if (dataProcessor.isConnected() && dataProcThread == null)
+        {
+            dataProcThread = new Thread(() -> dataProcessor.run());
+            dataProcThread.start();
+        }*/
     }
 
     private void toggleSwitch()
     {
-        if (dataProcessor.getIsServiceToggledOff())
+        if (dataProcessor == null || dataProcessor.getIsServiceToggledOff())
         {
             onTurnedOn();
             launchService();
@@ -342,6 +331,8 @@ public class Controller
     public void initialize()
     {
         thisController = this;
+        this.window = window;
+
         titleBar.setOnMousePressed(new EventHandler<MouseEvent>()
         {
             @Override
@@ -383,7 +374,6 @@ public class Controller
 
         Properties.deserializeProperties();
         Properties.getInstance().setInvalidFieldsToDefault();
-        dataProcessor = new DataProcessor(Properties.getInstance().getCollectInterval());
         nameField.setText(Properties.getInstance().getName());
     }
 }
