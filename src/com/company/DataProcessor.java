@@ -43,7 +43,7 @@ public class DataProcessor extends Thread
             System.load(new File(directory + File.separator + "src" + File.separator + "libs" + File.separator + "ClientMainClass.dll").getCanonicalPath());
         } catch (IOException e)
         {
-            Controller.getInstance().showErrorMessage("Couldn't load DLL (a module to get data from PC)");
+            Controller.getInstance().showStatusMessage("Couldn't load DLL (a module to get data from PC)");
         }
     }
 
@@ -106,7 +106,7 @@ public class DataProcessor extends Thread
         }
         catch (IOException e)
         {
-            Controller.getInstance().showErrorMessage("Could not establish connection. Server may be down");
+            Controller.getInstance().showStatusMessage("Could not establish connection. Server may be down");
             return false;
         }
 
@@ -116,7 +116,7 @@ public class DataProcessor extends Thread
         }
         catch(IOException e)
         {
-            Controller.getInstance().showErrorMessage("Could not configure connection");
+            Controller.getInstance().showStatusMessage("Could not configure connection");
             return false;
         }
 
@@ -163,12 +163,12 @@ public class DataProcessor extends Thread
             return factory.generateSecret(spec).getEncoded();
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e)
         {
-            Controller.getInstance().showErrorMessage("Can't encrypt password: algorithm or KeySpec exception");
+            Controller.getInstance().showStatusMessage("Can't encrypt password: algorithm or KeySpec exception");
             Controller.getInstance().onTurnedOff();
             return null;
         } catch (Exception e)
         {
-            Controller.getInstance().showErrorMessage("Can't encrypt password unknown reason");
+            Controller.getInstance().showStatusMessage("Can't encrypt password unknown reason");
             Controller.getInstance().onTurnedOff();
             return null;
         }
@@ -198,7 +198,7 @@ public class DataProcessor extends Thread
                 SelectionKey key = client.register(selector, SelectionKey.OP_READ);
             } catch (IOException e)
             {
-                Controller.getInstance().showErrorMessage("Could not create selector to interact with server");
+                Controller.getInstance().showStatusMessage("Could not create selector to interact with server");
                 isServiceToggledOff = true;
                 continue;
             }
@@ -208,7 +208,7 @@ public class DataProcessor extends Thread
                 selector.select();
             } catch (IOException e)
             {
-                Controller.getInstance().showErrorMessage("Could not use selector to manage connections");
+                Controller.getInstance().showStatusMessage("Could not use selector to manage connections");
                 isServiceToggledOff = true;
                 continue;
             }
@@ -233,29 +233,29 @@ public class DataProcessor extends Thread
                         client.read(readBuffer);
                     } catch (IOException error)
                     {
-                        Controller.getInstance().showErrorMessage("Did not receive respond from server");
-                        interruptConnection();
+                        Controller.getInstance().showStatusMessage("Did not receive respond from server");
+                        closeConnection();
                         Controller.getInstance().onTurnedOff();
                         return;
                     }
                     String serverRespond = new String(readBuffer.array()).trim();
                     if (serverRespond.startsWith("Data is being processed"))
                     {
-                        Controller.getInstance().showErrorMessage("Login and password are correct", Paint.valueOf("#9de05c"));
+                        Controller.getInstance().showStatusMessage("Login and password are correct", Paint.valueOf("#9de05c"));
                     }
                     else if (serverRespond.startsWith("Data is ignored"))
                     {
-                        Controller.getInstance().showErrorMessage("Data is ignored. Check if login and password are correct.");
-                        interruptConnection();
+                        Controller.getInstance().showStatusMessage("Data is ignored. Check if login and password are correct.");
+                        closeConnection();
                         Controller.getInstance().onTurnedOff();
                         return;
                     }
                     else if (serverRespond.equals("Register successful"))
                     {
-                        Controller.getInstance().showErrorMessage("Register successful", Paint.valueOf("#9de05c"));
+                        Controller.getInstance().showStatusMessage("Register successful", Paint.valueOf("#9de05c"));
                     } else if (serverRespond.equals("Register failed"))
                     {
-                        Controller.getInstance().showErrorMessage("Register failed. There may already be user with such login");
+                        Controller.getInstance().showStatusMessage("Register failed. There may already be user with such login");
                     }
                         respondAwaits = 0;
                     }
@@ -267,29 +267,46 @@ public class DataProcessor extends Thread
                 continue;
             }
 
-            System.out.println("Connection errors: " + connectionErrorsCounter + ", respond awaits: " + respondAwaits + ".");
+            //System.out.println("Connection errors: " + connectionErrorsCounter + ", respond awaits: " + respondAwaits + ".");
+            if (connectionErrorsCounter == (int) (Properties.getInstance().getRetryNumOnError() * 0.9) || respondAwaits == (int) (Properties.getInstance().getMaxNotRespondedDataPacks() * 0.9))
+            {
+                closeConnection();
+                Properties.getInstance().update();
+                if (!connectToServer(Properties.getInstance().getServAdr(), Properties.getInstance().getPort()))
+                {
+                    Controller.getInstance().showStatusMessage("Server is not responding. Reconnecting failed. It may be toggled off.");
+                    finishConnection();
+                    Controller.getInstance().onTurnedOff();
+                    continue;
+                }
+            }
+
             if (connectionErrorsCounter == Properties.getInstance().getRetryNumOnError() || respondAwaits == Properties.getInstance().getMaxNotRespondedDataPacks())
             {
-                //TODO - try to reconnect here
                 Platform.runLater(() -> { Controller.getInstance().showStage(); });
                 if (connectionErrorsCounter == Properties.getInstance().getRetryNumOnError())
                 {
-                    Controller.getInstance().showErrorMessage("Too many connection errors. Toggling service off.");
+                    Controller.getInstance().showStatusMessage("Too many connection errors. Toggling service off.");
                 }
                 else if (respondAwaits == Properties.getInstance().getMaxNotRespondedDataPacks())
                 {
-                    Controller.getInstance().showErrorMessage("Server is not responding. It may be shut down. Toggled off.");
+                    Controller.getInstance().showStatusMessage("Connection errors. Data packages are lost too often.");
                 }
                 finishConnection();
                 Controller.getInstance().onTurnedOff();
+                continue;
             }
 
             jsonStringLock.lock();
             if (jsonString != null)
             {
-                ByteBuffer buffer = ByteBuffer.allocate(1024 * 10);
-                //TODO - prevent sending malformed datapacks
-
+                ByteBuffer buffer = ByteBuffer.allocate(264000);
+                if (jsonString.length() > Properties.getInstance().getMaxDataPackLength())
+                {
+                    Controller.getInstance().showStatusMessage("Error: too large message (>" + Properties.getInstance().getMaxDataPackLength() + " symbols).");
+                    continue;
+                }
+                //jsonString = getLargeString(1024 * 1024);
                 buffer.put(("Client data\n" + jsonString).getBytes(StandardCharsets.UTF_8));
                 buffer.flip();
 
@@ -299,7 +316,7 @@ public class DataProcessor extends Thread
                 }
                 catch(IOException e)
                 {
-                    Controller.getInstance().showErrorMessage("Sending info to server failed. Retry in " + collectInterval / 1000 + "s");
+                    Controller.getInstance().showStatusMessage("Sending info to server failed. Retry in " + collectInterval / 1000 + "s");
                     connectionErrorsCounter++;
                     continue;
                 }
@@ -318,7 +335,7 @@ public class DataProcessor extends Thread
             regDataLock.lock();
             if (regData != null)
             {
-                Controller.getInstance().showErrorMessage("Register in process...", Paint.valueOf("#9de05c"));
+                Controller.getInstance().showStatusMessage("Register in process...", Paint.valueOf("#9de05c"));
                 ByteBuffer registerDataBuffer = ByteBuffer.allocate(1024 * 10);
                 try
                 {
@@ -326,7 +343,7 @@ public class DataProcessor extends Thread
                 }
                 catch (java.nio.BufferOverflowException | java.nio.ReadOnlyBufferException e)
                 {
-                    Controller.getInstance().showErrorMessage("Could not put message to buffer. Registration was not successful!");
+                    Controller.getInstance().showStatusMessage("Could not put message to buffer. Registration was not successful!");
                     continue;
                 }
 
@@ -337,7 +354,7 @@ public class DataProcessor extends Thread
                     client.write(registerDataBuffer);
                 } catch (IOException e)
                 {
-                    Controller.getInstance().showErrorMessage("Error writing data to server\nRegister failed");
+                    Controller.getInstance().showStatusMessage("Error writing data to server\nRegister failed");
                     regData = null;
                     continue;
                 }
@@ -361,7 +378,7 @@ public class DataProcessor extends Thread
         byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
         if (securedPassword == null)
         {
-            Controller.getInstance().showErrorMessage("Could not register. Password encrypting failed.");
+            Controller.getInstance().showStatusMessage("Could not register. Password encrypting failed.");
             return;
         }
 
@@ -372,14 +389,29 @@ public class DataProcessor extends Thread
         selector.wakeup();
         try
         {
-            this.join(500);
+            this.join(2000);
         }
         catch (InterruptedException e)
         {
-            Controller.getInstance().showErrorMessage("Registration interrupted");
+            Controller.getInstance().showStatusMessage("Registration interrupted");
         }
         finishConnection();
     }
+
+    //TODO - delete when debug not needed
+    /*private String getLargeString(int size)
+    {
+        int i = 0;
+        StringBuilder str = new StringBuilder("Goose" + String.format("%10d", i));
+        while (str.length() + 15 < size)
+        {
+            i++;
+            str.append("Goose").append(String.format("%10d", i));
+        }
+        System.out.println(str);
+        System.out.println(str.length());
+        return str.toString();
+    }*/
 
     public void collectAndSendData(String servAdr, int port, String userName, String password, int collectInterval)
     {
@@ -394,7 +426,7 @@ public class DataProcessor extends Thread
         byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
         if (securedPassword == null)
         {
-            Controller.getInstance().showErrorMessage("Could not register. Password encrypting failed.");
+            Controller.getInstance().showStatusMessage("Could not register. Password encrypting failed.");
             return;
         }
 
@@ -426,24 +458,16 @@ public class DataProcessor extends Thread
         if (selector != null)
         {
             selector.wakeup();
-            String end_msg = "EndThisConnection";
-            ByteBuffer buffer = ByteBuffer.allocate(1024);
-            buffer.put(end_msg.getBytes(StandardCharsets.UTF_8));
-            buffer.flip();
-
-            if (client.isOpen())
+            if (client != null && client.isConnected())
             {
-                try
-                {
-                    client.write(buffer);
-                    client.finishConnect();
-                } catch (IOException e)
-                {
-                    Controller.getInstance().showErrorMessage("Emergency connection closure.");
-                    interruptConnection();
-                }
+                String end_msg = "EndThisConnection";
+                ByteBuffer buffer = ByteBuffer.allocate(1024);
+                buffer.put(end_msg.getBytes(StandardCharsets.UTF_8));
+                buffer.flip();
             }
         }
+
+        closeConnection();
 
         if (this.isAlive())
         {
@@ -452,25 +476,24 @@ public class DataProcessor extends Thread
                 this.join(2000);
             } catch (InterruptedException e)
             {
-                Controller.getInstance().showErrorMessage("Process already interrupted.");
+                Controller.getInstance().showStatusMessage("Process already interrupted.");
             }
         }
         Controller.getInstance().setDataProcessor(new DataProcessor());
     }
 
-    public void interruptConnection()
+    public void closeConnection()
     {
         try
         {
             if (client != null)
             {
-                client.finishConnect();
                 client.close();
                 client = null;
             }
         } catch (IOException e)
         {
-            Controller.getInstance().showErrorMessage("Failed to close connection! application restart may be needed.");
+            Controller.getInstance().showStatusMessage("Failed to close connection! application restart may be needed.");
         }
     }
 

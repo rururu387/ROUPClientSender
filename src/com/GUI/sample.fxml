@@ -154,7 +154,7 @@
                                           <DropShadow height="9.0" offsetY="1.0" radius="1.75" spread="0.75" width="0.0" />
                                        </effect>
                                     </Text>
-                                    <Text fx:id="errorMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="244.0">
+                                    <Text fx:id="statusMessage" fill="#ff902f" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="244.0">
                                        <font>
                                           <Font size="16.0" />
                                        </font>

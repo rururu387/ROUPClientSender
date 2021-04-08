@@ -46,10 +46,10 @@ public class DataPack {//Class which contains gets and contains info about progr
         }
         activeWindowProcessName = getNormalString(adapter.getProgramNameByActiveWindow());
         if (activeWindowProcessName == "Unknown program"){
-            Controller.getInstance().showErrorMessage("Couldn't get foreground program name.\n It's OS-protected");
+            Controller.getInstance().showStatusMessage("Couldn't get foreground program name.\n It's OS-protected");
         }
         else if (activeWindowProcessName == "Foreground process query error"){
-            Controller.getInstance().showErrorMessage("Foreground program query error!");
+            Controller.getInstance().showStatusMessage("Foreground program query error!");
             activeWindowProcessName = "Unknown program";
         }
 
@@ -78,10 +78,10 @@ public class DataPack {//Class which contains gets and contains info about progr
                 } else//there already is a program in the list with current name
                 {
                     if (buffCpuLoadByProcess < 0){
-                        Controller.getInstance().showErrorMessage("Could not get CPU load of\nsome process(-es)");
+                        Controller.getInstance().showStatusMessage("Could not get CPU load of\nsome process(-es)");
                     }
                     if (buffRamUsage == buffSizeTMax){
-                        Controller.getInstance().showErrorMessage("Could not get RAM usage of\nsome process(-es)");
+                        Controller.getInstance().showStatusMessage("Could not get RAM usage of\nsome process(-es)");
                     }
                     bufProgram.merge(adapter.getCurProcID(), adapter.getCurProcThreadCnt(), buffCpuLoadByProcess, buffRamUsage);
                 }

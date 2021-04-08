@@ -50,7 +50,7 @@ public class Controller
     private ImageView closeButton;
 
     @FXML
-    private Text errorMessage;
+    private Text statusMessage;
 
     @FXML
     private ImageView registerButton;
@@ -70,14 +70,8 @@ public class Controller
     @FXML
     void onRegisterReleased(MouseEvent event)
     {
-        if (dataProcessor.isConnected())
-        {
-            dataProcessor.register(Properties.getInstance().getServAdr(), Properties.getInstance().getPort(), nameField.getText(), passwordField.getText());
-        }
-        else
-        {
-            Controller.getInstance().onTurnedOff();
-        }
+        Properties.getInstance().update();
+        dataProcessor.register(Properties.getInstance().getServAdr(), Properties.getInstance().getPort(), nameField.getText(), passwordField.getText());
     }
 
     @FXML
@@ -99,13 +93,13 @@ public class Controller
     }
 
     @FXML
-    private void onMinimizeClicked(MouseEvent event)
+    private void onMinimizeClicked()
     {
         window.setIconified(true);
     }
 
     @FXML
-    private void onToggleSwitch(MouseEvent event)
+    private void onToggleSwitch()
     {
         toggleSwitch();
     }
@@ -132,17 +126,17 @@ public class Controller
         this.window = window;
     }
 
-    public void showErrorMessage(String error)
+    public void showStatusMessage(String error)
     {
-        errorMessage.setText(error);
-        errorMessage.setVisible(true);
+        statusMessage.setText(error);
+        statusMessage.setVisible(true);
     }
 
-    public void showErrorMessage(String error, Paint paint)
+    public void showStatusMessage(String error, Paint paint)
     {
-        errorMessage.setText(error);
-        errorMessage.setFill(paint);
-        errorMessage.setVisible(true);
+        statusMessage.setText(error);
+        statusMessage.setFill(paint);
+        statusMessage.setVisible(true);
     }
 
     //Modified source https://gist.github.com/jonyfs/b279b5e052c3b6893a092fed79aa7fbe#file-javafxtrayiconsample-java-L86
@@ -227,7 +221,7 @@ public class Controller
         {
             //Show window
             ((Stage) (closeButton).getScene().getWindow()).show();
-            showErrorMessage("Couldn't minimize application to tray");
+            showStatusMessage("Couldn't minimize application to tray");
         }
     }
 
@@ -254,7 +248,7 @@ public class Controller
                 };
                 dataProcessor.setUncaughtExceptionHandler(h);
                 dataProcessor.interrupt();
-                Controller.getInstance().showErrorMessage("Emergency service interrupt.");
+                Controller.getInstance().showStatusMessage("Emergency service interrupt.");
             }
         }
     }
@@ -295,15 +289,11 @@ public class Controller
 
     public void launchService()
     {
+        Properties.getInstance().update();
         if (dataProcessor.getIsServiceToggledOff())
         {
             dataProcessor.collectAndSendData(Properties.getInstance().getServAdr(), Properties.getInstance().getPort(), Controller.getInstance().getUserName(), Controller.getInstance().passwordField.getText(), Properties.getInstance().getCollectInterval());
         }
-        /*if (dataProcessor.isConnected() && dataProcThread == null)
-        {
-            dataProcThread = new Thread(() -> dataProcessor.run());
-            dataProcThread.start();
-        }*/
     }
 
     private void toggleSwitch()
@@ -331,7 +321,6 @@ public class Controller
     public void initialize()
     {
         thisController = this;
-        this.window = window;
 
         titleBar.setOnMousePressed(new EventHandler<MouseEvent>()
         {
@@ -368,7 +357,7 @@ public class Controller
             @Override
             public void handle(MouseEvent t)
             {
-                errorMessage.setVisible(false);
+                statusMessage.setVisible(false);
             }
         });
 

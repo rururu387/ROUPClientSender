@@ -16,6 +16,7 @@ public class Properties {
     private int collectInterval = 10000;
     private int retryNumOnError = 3;
     private int maxNotRespondedDataPacks = 5;
+    private int maxDataPackLength = 130000;
 
     //This is an amount of time that is required to stop service.
     //Program may freeze for time milliseconds when disabled
@@ -52,6 +53,11 @@ public class Properties {
         return maxNotRespondedDataPacks;
     }
 
+    public int getMaxDataPackLength()
+    {
+        return maxDataPackLength;
+    }
+
     public static Properties getInstance()
     {
         return thisAppProperties;
@@ -71,6 +77,24 @@ public class Properties {
         return str;
     }
 
+    public Properties(Properties properties)
+    {
+        this.name = properties.getName();
+        this.servAdr = properties.getServAdr();
+        this.port = properties.getPort();
+        this.collectInterval = properties.getCollectInterval();
+        this.retryNumOnError = properties.getRetryNumOnError();
+        this.maxNotRespondedDataPacks = properties.getMaxNotRespondedDataPacks();
+        this.maxDataPackLength = properties.getMaxDataPackLength();
+    }
+
+    public void update()
+    {
+        Properties currentProperties = new Properties(this);
+        Properties.deserializeProperties();
+        this.name = currentProperties.getName();
+    }
+
     public static void serializeProperties()
     {
         //Make changes in case properties are changed while app was working
@@ -84,7 +108,7 @@ public class Properties {
             propertiesFWriter = new FileWriter(propertiesPath);
         }
         catch (IOException e) {
-            Controller.getInstance().showErrorMessage("Could find path to update properties file file");
+            Controller.getInstance().showStatusMessage("Could find path to update properties file file");
             return;
         }
         try
@@ -94,7 +118,7 @@ public class Properties {
         }
         catch(IOException e)
         {
-            Controller.getInstance().showErrorMessage("Could not update properties file");
+            Controller.getInstance().showStatusMessage("Could not update properties file");
             return;
         }
     }
@@ -108,7 +132,7 @@ public class Properties {
             configFileReader = new FileReader(propertiesPath);
         } catch (FileNotFoundException e)
         {
-            Controller.getInstance().showErrorMessage("Properties file not found. Using default parameters");
+            Controller.getInstance().showStatusMessage("Properties file not found. Using default parameters");
             new Properties();
             return;
         }
@@ -120,7 +144,7 @@ public class Properties {
         }
         catch (JsonSyntaxException | JsonIOException | IOException e)
         {
-            Controller.getInstance().showErrorMessage("Could not read config file. Using default parameters");
+            Controller.getInstance().showStatusMessage("Could not read config file. Using default parameters");
             new Properties();
             return;
         }
@@ -131,18 +155,24 @@ public class Properties {
         if (port <= 1024 || port > 65535)
         {
             port = 5020;
-            Controller.getInstance().showErrorMessage("Value invalid. 1024 < port <= 65535. Using default value");
+            Controller.getInstance().showStatusMessage("Value invalid. 1024 < port <= 65535. Using default value");
         }
 
         if (collectInterval < 1000)
         {
             collectInterval = 10000;
-            Controller.getInstance().showErrorMessage("Collect interval must be > 1000 ms. Using default value");
+            Controller.getInstance().showStatusMessage("Collect interval must be > 1000 ms. Using default value");
+        }
+
+        if (maxDataPackLength > 200000 || maxDataPackLength < 30000)
+        {
+            maxDataPackLength = 130000;
+            Controller.getInstance().showStatusMessage("Value invalid. 30000 < MaxDataPathLength < 200000. Using default value");
         }
 
         if (collectInterval < 2000)
         {
-            Controller.getInstance().showErrorMessage("Warning! Program may work incorrect if PC is overloaded");
+            Controller.getInstance().showStatusMessage("Warning! Program may work incorrect if PC is overloaded");
         }
     }
 }
