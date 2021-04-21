@@ -253,12 +253,14 @@ public class DataProcessor extends Thread
                     else if (serverRespond.equals("Register successful"))
                     {
                         Controller.getInstance().showStatusMessage("Register successful", Paint.valueOf("#9de05c"));
+                        return;
                     } else if (serverRespond.equals("Register failed"))
                     {
                         Controller.getInstance().showStatusMessage("Register failed. There may already be user with such login");
+                        return;
                     }
-                        respondAwaits = 0;
-                    }
+                    respondAwaits = 0;
+                }
                     /*No other actions are planned yet*/
             }
 
@@ -283,7 +285,6 @@ public class DataProcessor extends Thread
 
             if (connectionErrorsCounter == Properties.getInstance().getRetryNumOnError() || respondAwaits == Properties.getInstance().getMaxNotRespondedDataPacks())
             {
-                Platform.runLater(() -> { Controller.getInstance().showStage(); });
                 if (connectionErrorsCounter == Properties.getInstance().getRetryNumOnError())
                 {
                     Controller.getInstance().showStatusMessage("Too many connection errors. Toggling service off.");
@@ -292,6 +293,7 @@ public class DataProcessor extends Thread
                 {
                     Controller.getInstance().showStatusMessage("Connection errors. Data packages are lost too often.");
                 }
+                Platform.runLater(() -> { Controller.getInstance().showStage(); });
                 finishConnection();
                 Controller.getInstance().onTurnedOff();
                 continue;
@@ -335,7 +337,6 @@ public class DataProcessor extends Thread
             regDataLock.lock();
             if (regData != null)
             {
-                Controller.getInstance().showStatusMessage("Register in process...", Paint.valueOf("#9de05c"));
                 ByteBuffer registerDataBuffer = ByteBuffer.allocate(1024 * 10);
                 try
                 {
@@ -344,7 +345,9 @@ public class DataProcessor extends Thread
                 catch (java.nio.BufferOverflowException | java.nio.ReadOnlyBufferException e)
                 {
                     Controller.getInstance().showStatusMessage("Could not put message to buffer. Registration was not successful!");
-                    continue;
+                    setIsServiceToggledOff(true);
+                    regDataLock.unlock();
+                    return;
                 }
 
                 registerDataBuffer.flip();
@@ -354,12 +357,13 @@ public class DataProcessor extends Thread
                     client.write(registerDataBuffer);
                 } catch (IOException e)
                 {
-                    Controller.getInstance().showStatusMessage("Error writing data to server\nRegister failed");
+                    Controller.getInstance().showStatusMessage("Error sending data to server. Register failed");
                     regData = null;
-                    continue;
+                    setIsServiceToggledOff(true);
+                    regDataLock.unlock();
+                    return;
                 }
                 regData = null;
-                setIsServiceToggledOff(false);
             }
             regDataLock.unlock();
         }
@@ -374,6 +378,7 @@ public class DataProcessor extends Thread
         }
 
         setIsServiceToggledOff(false);
+
         this.start();
         byte[] securedPassword = getPBKDF2SecurePassword(userName, password);
         if (securedPassword == null)
@@ -389,7 +394,7 @@ public class DataProcessor extends Thread
         selector.wakeup();
         try
         {
-            this.join(2000);
+            this.join();
         }
         catch (InterruptedException e)
         {

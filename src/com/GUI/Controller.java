@@ -17,6 +17,7 @@ import javafx.scene.text.Text;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
+
 import java.io.*;
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -128,13 +129,12 @@ public class Controller
 
     public void showStatusMessage(String error)
     {
-        statusMessage.setText(error);
-        statusMessage.setVisible(true);
+        showStatusMessage(error, Paint.valueOf("#f8902f"));
     }
 
-    public void showStatusMessage(String error, Paint paint)
+    public void showStatusMessage(String message, Paint paint)
     {
-        statusMessage.setText(error);
+        statusMessage.setText(message);
         statusMessage.setFill(paint);
         statusMessage.setVisible(true);
     }
